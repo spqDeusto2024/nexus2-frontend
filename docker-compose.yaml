@@ -1,0 +1,19 @@
+version: '3.8'  # Se actualizó a la versión recomendada
+
+services:
+  vue-frontend:
+    build:
+      context: ./nexus2-frontend          # Apunta a la carpeta del proyecto Vue
+      dockerfile: ../docker/Dockerfile    # Dockerfile ubicado en la carpeta "docker"
+    container_name: vue-frontend
+    ports:
+      - "3000:80"                         # El contenedor estará disponible en http://localhost:3000
+    networks:
+      - fastapi-network                   # La red usada coincide con la definida abajo
+    environment:
+      VUE_APP_BACKEND_URL: http://fastapi:8000 # URL del backend
+
+networks:
+  fastapi-network:                        # Define la red fastapi-network
+    name: fastapi_nexus2                  # El nombre real de la red es fastapi_nexus2
+    driver: bridge                        # Tipo de red (puente por defecto)

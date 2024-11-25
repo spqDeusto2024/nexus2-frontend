@@ -1,0 +1,17 @@
+# Etapa de construcción
+FROM node:16-alpine as build
+WORKDIR /app
+
+# Copiar dependencias e instalarlas
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copiar el código fuente y construir
+COPY . .
+RUN npm run build
+
+# Etapa de producción
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

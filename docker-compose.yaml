@@ -1,4 +1,4 @@
-version: '3.8'  # Se actualizó a la versión recomendada
+version: '3.8'
 
 services:
   vue-frontend:
@@ -9,11 +9,10 @@ services:
     ports:
       - "3000:80"                         # El contenedor estará disponible en http://localhost:3000
     networks:
-      - fastapi-network                   # La red usada coincide con la definida abajo
+      - fastapi_nexus2                   # El nombre debe coincidir con el definido abajo
     environment:
       VUE_APP_BACKEND_URL: http://fastapi:8000 # URL del backend
 
 networks:
-  fastapi-network:                        # Define la red fastapi-network
-    name: fastapi_nexus2                  # El nombre real de la red es fastapi_nexus2
-    driver: bridge                        # Tipo de red (puente por defecto)
+  fastapi_nexus2:
+    external: true                     # Usa la red externa

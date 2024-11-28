@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    <h1>Hola Frontend</h1>
+    <!-- Aquí se mostrarán las diferentes vistas -->
+    <router-view></router-view>
   </div>
 </template>
 

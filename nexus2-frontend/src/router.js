@@ -3,6 +3,7 @@ import Home from './components/Home.vue'; // Importa la nueva página de inicio
 import ResidentLogin from './components/ResidentLogin.vue';
 import Dashboard from './components/Dashboard.vue';
 import DashboardAdmin from './components/DashboardAdmin.vue'; // Ajusta el path si está en otra carpeta
+import CreateAdmin from './components/CreateAdmin.vue'; 
 
 const routes = [
   {
@@ -24,6 +25,11 @@ const routes = [
     path: '/dashboardAdmin',
     name: 'DashboardAdmin',
     component: DashboardAdmin,
+  },
+  {
+    path: '/createAdmin',
+    name: 'CreateAdmin',
+    component: CreateAdmin,
   },
   {
     path: '/admin-login',

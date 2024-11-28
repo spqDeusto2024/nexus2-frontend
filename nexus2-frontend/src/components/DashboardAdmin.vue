@@ -1,13 +1,345 @@
-
 <template>
-  <div>
-    <h1>Dashboard</h1>
-    <p>Bienvenido al panel de control, administrador.</p>
+  <div class="map-container">
+    <!-- Logo -->
+    <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
+
+    <!-- Notificación de acceso -->
+    <div
+      v-if="showNotification"
+      :class="['notification', notificationType]"
+    >
+      <span>{{ notificationMessage }}</span>
+      <button class="close-btn" @click="closeNotification">✖</button>
+    </div>
+
+    <!-- Cabecera -->
+    <div class="map-header">
+      <h1 class="map-title">Mapa de Habitaciones</h1>
+      <p class="map-subtitle">Explora las habitaciones disponibles en el refugio.</p>
+    </div>
+
+    <!-- Botón Crear Administrador -->
+    <button class="create-admin-btn" @click="redirectToCreateAdmin">
+      Crear Administrador
+    </button>
+
+    <!-- Contenedor del mapa -->
+    <div class="map-layout">
+      <div
+        v-for="room in rooms"
+        :key="room.idRoom"
+        class="room-block"
+        :style="{ top: `${room.y}px`, left: `${room.x}px` }"
+      >
+        <!-- Emoji dependiendo del tipo de habitación -->
+        <div class="room-icon">
+          <span class="btn-icon">{{ getEmojiForRoom(room.roomName) }}</span>
+        </div>
+        <span class="room-name">{{ room.roomName }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
-  name: 'Dashboard',
+  name: "RoomMap",
+  data() {
+    return {
+      rooms: [], // Almacena habitaciones obtenidas del backend
+      columns: 4, // Número de columnas en la cuadrícula
+      roomSize: 160, // Tamaño de cada habitación en píxeles
+      userId: localStorage.getItem("userId"), // Obtener el userId del localStorage
+      notificationMessage: '',  // Mensaje de la notificación
+      notificationType: '',     // Tipo de la notificación: "success" o "error"
+      showNotification: false,  // Si se debe mostrar la notificación o no
+    };
+  },
+  methods: {
+    // Llamada al backend para obtener las habitaciones
+    async fetchRooms() {
+      try {
+        const response = await axios.get("http://localhost:8000/listRooms");
+        this.rooms = response.data.rooms.map((room, index) => {
+          const column = index % this.columns; // Calcular la columna de la habitación
+          const row = Math.floor(index / this.columns); // Calcular la fila de la habitación
+
+          // Calcular las posiciones X y Y
+          return {
+            ...room,
+            x: column * this.roomSize,
+            y: row * this.roomSize,
+          };
+        });
+      } catch (error) {
+        console.error("Error al obtener las habitaciones:", error);
+        alert("No se pudo cargar el mapa de habitaciones.");
+      }
+    },
+
+    // Obtiene el emoji adecuado según el nombre de la habitación
+    getEmojiForRoom(roomName) {
+      if (roomName.toLowerCase().includes("room")) {
+        return "🛏️"; // Emoji de cama
+      } else if (roomName.toLowerCase().includes("kitchen")) {
+        return "🍳"; // Emoji de cocina
+      } else {
+        return "🏠"; // Emoji genérico
+      }
+    },
+
+    // Lógica para mover al usuario a la habitación seleccionada
+    async moveToRoom(room) {
+      // Verifica si el userId está presente en el localStorage
+      const userId = localStorage.getItem("userId");
+
+      if (!userId) {
+        alert("Debes iniciar sesión para moverte.");
+        this.$router.push("/"); // Redirige al login si no hay usuario logueado
+        return;
+      }
+
+      try {
+        // Llamada al backend para verificar si el usuario tiene acceso a la habitación
+        const response = await axios.get("http://localhost:8000/room/access", {
+          params: {
+            idResident: userId, // Asegurándonos de que userId esté correctamente asignado
+            idRoom: room.idRoom, // Pasamos el idRoom
+          },
+        });
+
+        const message = response.data.message;
+
+        // Mostrar el mensaje de acceso
+        if (message === "Access granted. Welcome to the room.") {
+          this.showNotification = true;
+          this.notificationMessage = "Acceso concedido. Bienvenido a la habitación.";
+          this.notificationType = "success"; // Verde
+        } else if (message === "Access denied. You are in the wrong room.") {
+          this.showNotification = true;
+          this.notificationMessage = "Acceso denegado. Estás en la habitación equivocada.";
+          this.notificationType = "error"; // Rojo
+        } else {
+          this.showNotification = true;
+          this.notificationMessage = message;
+          this.notificationType = "error"; // Rojo por defecto
+        }
+      } catch (error) {
+        console.error("Error al verificar acceso:", error);
+        this.showNotification = true;
+        this.notificationMessage = "Ocurrió un error al intentar acceder a la habitación.";
+        this.notificationType = "error"; // Rojo
+      }
+    },
+
+    // Método para cerrar la notificación
+    closeNotification() {
+      this.showNotification = false;
+    },
+
+    // Método para redirigir al componente Crear Administrador
+    redirectToCreateAdmin() {
+      this.$router.push("/createAdmin"); // Redirige al componente createAdmin
+    },
+  },
+
+  // Al crear el componente, si el usuario no está logueado, lo redirigimos al login
+  created() {
+    if (!this.userId) {
+      alert("Debes iniciar sesión para acceder al mapa.");
+      this.$router.push("/"); // Redirige al login si no hay usuario logueado
+    } else {
+      this.fetchRooms(); // Si el usuario está logueado, obtenemos las habitaciones
+    }
+  },
 };
 </script>
+
+<style scoped>
+/* Contenedor general */
+.map-container {
+  position: relative;
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #121212; /* Fondo oscuro */
+  color: #e0e0e0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Logo */
+.logo {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 120px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.logo:hover {
+  transform: scale(1.1);
+}
+
+/* Notificación */
+.notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  width: 80%;
+  max-width: 500px;
+  z-index: 999;
+}
+
+.notification.success {
+  background-color: #4CAF50; /* Verde */
+}
+
+.notification.error {
+  background-color: #f44336; /* Rojo */
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #ddd;
+}
+
+/* Cabecera */
+.map-header {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #e0e0e0;
+}
+
+.map-title {
+  font-size: 2.2rem;
+  color: #ffcc00; /* Naranja para el título */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.map-subtitle {
+  font-size: 1.1rem;
+  color: #bdbdbd;
+}
+
+/* Contenedor del mapa */
+.map-layout {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  margin: 0 auto;
+  border-radius: 15px;
+  overflow: hidden;
+  background: url('@/assets/map-grid.png') center/cover; /* Fondo de cuadrícula */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Habitaciones como bloques */
+.room-block {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  background: #2a2a2a; /* Fondo gris oscuro */
+  color: #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #444;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: default;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.room-block:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Emoji de habitación */
+.room-icon {
+  margin-bottom: 10px;
+  font-size: 2rem;
+}
+
+/* Nombre de la habitación */
+.room-name {
+  text-transform: uppercase;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Botón de mover */
+.move-btn {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ffcc00;
+  color: #121212;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s;
+  opacity: 0; /* Inicialmente oculto */
+  pointer-events: none; /* No se puede interactuar mientras no esté visible */
+}
+
+.room-block:hover .move-btn {
+  opacity: 1; /* Aparece al hacer hover sobre la habitación */
+  pointer-events: auto;
+}
+
+.move-btn:hover {
+  background-color: #e0b800;
+  transform: scale(1.05);
+}
+
+/* Botón Crear Administrador */
+.create-admin-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: #ffcc00;
+  color: #121212;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s;
+  z-index: 1000;
+}
+
+.create-admin-btn:hover {
+  background-color: #e0b800;
+  transform: scale(1.05);
+}
+</style>

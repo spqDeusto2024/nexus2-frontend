@@ -49,6 +49,7 @@ export default {
   methods: {
     async handleLogin() {
       try {
+        // Hacer la solicitud al backend con el nombre y apellido
         const response = await apiClient.get(`/login`, {
           params: {
             name: this.name,
@@ -56,7 +57,20 @@ export default {
           },
         });
         console.log("Login exitoso:", response.data);
-        this.$router.push("/dashboard");
+
+        // Verificar si el login fue exitoso
+        if (response.data.status === "ok") {
+          const userId = response.data.user.idResident;
+
+          // Guardar el ID del residente en el localStorage
+          localStorage.setItem('userId', userId);
+          
+          // Redirigir al dashboard
+          this.$router.push("/dashboardAdmin");
+        } else {
+          // Si las credenciales son incorrectas, mostrar mensaje de error
+          this.errorMessage = response.data.message;
+        }
       } catch (error) {
         if (error.response && error.response.data) {
           this.errorMessage = error.response.data.detail;
@@ -72,15 +86,15 @@ export default {
 <style>
 /* Estilos generales para el tema underground */
 .login-container {
-  position: relative; /* Para posicionar el logo */
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #121212; /* Fondo oscuro para simular un ambiente subterráneo */
+  background-color: #121212;
   font-family: 'Arial', sans-serif;
   margin: 0;
-  color: #e0e0e0; /* Texto claro para contraste */
+  color: #e0e0e0;
 }
 
 /* Logo en la esquina superior izquierda */
@@ -88,32 +102,32 @@ export default {
   position: absolute;
   top: 20px;
   left: 20px;
-  width: 200px; /* Tamaño más grande del logo */
-  height: auto; /* Asegura que mantenga las proporciones */
-  cursor: pointer; /* Cambiar cursor al pasar sobre el logo */
+  width: 200px;
+  height: auto;
+  cursor: pointer;
   transition: transform 0.2s ease;
 }
 
 .logo:hover {
-  transform: scale(1.1); /* Efecto de agrandamiento al pasar el ratón */
+  transform: scale(1.1);
 }
 
 /* Tarjeta del formulario */
 .login-card {
-  background: #1e1e1e; /* Fondo de la tarjeta con un tono gris oscuro */
-  border: 1px solid #444; /* Bordes simulando metal o refuerzo */
+  background: #1e1e1e;
+  border: 1px solid #444;
   border-radius: 10px;
   padding: 30px;
   width: 350px;
   text-align: center;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6); /* Sombra para profundidad */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6);
 }
 
 /* Título */
 .login-title {
   font-size: 24px;
   margin-bottom: 20px;
-  color: #ffcc00; /* Color cálido para resaltar, como luz de advertencia */
+  color: #ffcc00;
 }
 
 /* Estilos del formulario */
@@ -139,22 +153,22 @@ label {
   width: 100%;
   padding: 10px;
   font-size: 14px;
-  border: 1px solid #555; /* Borde tenue para inputs */
+  border: 1px solid #555;
   border-radius: 5px;
-  background-color: #2a2a2a; /* Fondo oscuro para inputs */
+  background-color: #2a2a2a;
   color: #fff;
   outline: none;
   transition: border-color 0.3s ease;
 }
 
 .form-input:focus {
-  border-color: #ffcc00; /* Resalta al enfocar */
+  border-color: #ffcc00;
   box-shadow: 0 0 5px #ffcc00;
 }
 
 /* Botón de enviar */
 .btn-submit {
-  background-color: #ffcc00; /* Botón principal con color cálido */
+  background-color: #ffcc00;
   color: #121212;
   padding: 12px;
   border: none;
@@ -166,13 +180,13 @@ label {
 }
 
 .btn-submit:hover {
-  background-color: #e0b800; /* Un tono más oscuro al pasar el cursor */
+  background-color: #e0b800;
   transform: scale(1.05);
 }
 
 /* Mensaje de error */
 .error-message {
-  color: #ff6b6b; /* Rojo brillante para errores */
+  color: #ff6b6b;
   margin-top: 15px;
   font-size: 14px;
 }

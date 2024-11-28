@@ -1,7 +1,12 @@
 <template>
   <div class="map-container">
     <!-- Logo -->
-    <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
+    <img 
+      src="@/assets/logo.png" 
+      alt="Logo Nexus2" 
+      class="logo" 
+      @click="redirectToHome" 
+    />
 
     <!-- Notificación de acceso -->
     <div
@@ -30,6 +35,7 @@
         :key="room.idRoom"
         class="room-block"
         :style="{ top: `${room.y}px`, left: `${room.x}px` }"
+        @click="moveToRoom(room)"
       >
         <!-- Emoji dependiendo del tipo de habitación -->
         <div class="room-icon">
@@ -58,6 +64,11 @@ export default {
     };
   },
   methods: {
+    // Redirige al usuario a la página de inicio
+    redirectToHome() {
+      this.$router.push("/");  // Cambia "/home" por la ruta correcta en tu aplicación
+    },
+
     // Llamada al backend para obtener las habitaciones
     async fetchRooms() {
       try {
@@ -92,9 +103,7 @@ export default {
 
     // Lógica para mover al usuario a la habitación seleccionada
     async moveToRoom(room) {
-      // Verifica si el userId está presente en el localStorage
       const userId = localStorage.getItem("userId");
-
       if (!userId) {
         alert("Debes iniciar sesión para moverte.");
         this.$router.push("/"); // Redirige al login si no hay usuario logueado
@@ -102,17 +111,15 @@ export default {
       }
 
       try {
-        // Llamada al backend para verificar si el usuario tiene acceso a la habitación
         const response = await axios.get("http://localhost:8000/room/access", {
           params: {
-            idResident: userId, // Asegurándonos de que userId esté correctamente asignado
-            idRoom: room.idRoom, // Pasamos el idRoom
+            idResident: userId,
+            idRoom: room.idRoom,
           },
         });
 
         const message = response.data.message;
 
-        // Mostrar el mensaje de acceso
         if (message === "Access granted. Welcome to the room.") {
           this.showNotification = true;
           this.notificationMessage = "Acceso concedido. Bienvenido a la habitación.";
@@ -290,35 +297,6 @@ export default {
   text-transform: uppercase;
   text-align: center;
   font-size: 0.9rem;
-}
-
-/* Botón de mover */
-.move-btn {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #ffcc00;
-  color: #121212;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s;
-  opacity: 0; /* Inicialmente oculto */
-  pointer-events: none; /* No se puede interactuar mientras no esté visible */
-}
-
-.room-block:hover .move-btn {
-  opacity: 1; /* Aparece al hacer hover sobre la habitación */
-  pointer-events: auto;
-}
-
-.move-btn:hover {
-  background-color: #e0b800;
-  transform: scale(1.05);
 }
 
 /* Botón Crear Administrador */

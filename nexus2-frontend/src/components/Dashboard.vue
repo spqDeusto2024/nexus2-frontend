@@ -1,13 +1,12 @@
 <template>
   <div class="map-container">
-    <!-- Logo -->
-    <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
+    <!-- Logo que redirige al home -->
+    <router-link to="/" class="logo-container">
+      <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
+    </router-link>
 
     <!-- Notificación de acceso -->
-    <div
-      v-if="showNotification"
-      :class="['notification', notificationType]"
-    >
+    <div v-if="showNotification" :class="['notification', notificationType]">
       <span>{{ notificationMessage }}</span>
       <button class="close-btn" @click="closeNotification">✖</button>
     </div>
@@ -33,10 +32,7 @@
         <span class="room-name">{{ room.roomName }}</span>
 
         <!-- Botón "Moverme aquí" -->
-        <button 
-          class="move-btn" 
-          @click="moveToRoom(room)"
-        >
+        <button class="move-btn" @click="moveToRoom(room)">
           Moverme aquí
         </button>
       </div>
@@ -166,11 +162,14 @@ export default {
   font-family: 'Poppins', sans-serif;
 }
 
-/* Logo */
-.logo {
+/* Contenedor del logo con enlace */
+.logo-container {
   position: absolute;
   top: 20px;
   left: 20px;
+}
+
+.logo {
   width: 120px;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -269,7 +268,6 @@ export default {
   cursor: default;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.4);
-  position: relative;
 }
 
 .room-block:hover {

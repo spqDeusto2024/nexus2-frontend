@@ -1,7 +1,13 @@
 <template>
   <div class="create-admin-container">
     <!-- Logo en la esquina superior izquierda -->
-    <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
+    <img
+      src="@/assets/logo.png"
+      alt="Logo Nexus2"
+      class="logo"
+      @click="$router.push('/')" 
+    />
+    <!-- El comentario ahora está fuera del atributo -->
 
     <div class="create-admin-card">
       <h1 class="create-admin-title">Crear Administrador</h1>
@@ -49,7 +55,6 @@
 
 <script>
 import axios from "axios";
-import { useRouter } from 'vue-router';  // Importa el hook de Vue Router
 
 export default {
   data() {
@@ -62,6 +67,12 @@ export default {
     };
   },
   methods: {
+    // Método que redirige al home (página principal)
+    goToHome() {
+      this.$router.push('/');  // Redirige a la página de inicio (home)
+    },
+
+    // Método para manejar la creación de administrador
     async handleCreateAdmin() {
       const adminData = {
         email: this.email,
@@ -90,6 +101,7 @@ export default {
       }
     },
 
+    // Método para resetear el formulario
     resetForm() {
       this.name = "";
       this.email = "";

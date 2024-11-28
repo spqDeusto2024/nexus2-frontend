@@ -1,7 +1,12 @@
 <template>
   <div class="login-container">
-    <!-- Logo en la esquina superior izquierda -->
-    <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
+    <!-- Logo en la esquina superior izquierda que redirige al home al hacer clic -->
+    <img
+      src="@/assets/logo.png"
+      alt="Logo Nexus2"
+      class="logo"
+      @click="goToHome"
+    />
 
     <div class="login-card">
       <h1 class="login-title">Acceso Administrador</h1>
@@ -47,6 +52,12 @@ export default {
     };
   },
   methods: {
+    // Función para redirigir al inicio (home) al hacer clic en el logo
+    goToHome() {
+      console.log("Redirigiendo al home...");  // Verifica si esta línea se ejecuta
+      this.$router.push('/');  // Redirige a la página de inicio (home)
+    },
+
     async handleLogin() {
       try {
         // Realiza la solicitud de login del administrador

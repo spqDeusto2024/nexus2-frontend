@@ -1,7 +1,9 @@
 <template>
   <div class="login-container">
-    <!-- Logo en la esquina superior izquierda -->
-    <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
+    <!-- Logo en la esquina superior izquierda que redirige al Dashboard -->
+    <router-link to="/">
+      <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
+    </router-link>
 
     <div class="login-card">
       <h1 class="login-title">Acceso al Refugio</h1>
@@ -66,7 +68,7 @@ export default {
           localStorage.setItem('userId', userId);
           
           // Redirigir al dashboard
-          this.$router.push("/dashboardAdmin");
+          this.$router.push("/dashboard");
         } else {
           // Si las credenciales son incorrectas, mostrar mensaje de error
           this.errorMessage = response.data.message;

@@ -60,15 +60,19 @@ export default {
 
     async handleLogin() {
       try {
-        // Realiza la solicitud de login del administrador
         const response = await apiClient.get(`/loginAdmin`, {
           params: {
             email: this.email,
             password: this.password,
           },
         });
+
         console.log("Login exitoso:", response.data);
-        // Redirige al dashboard si el login es exitoso
+
+        // Almacenar el ID del administrador en el localStorage
+        localStorage.setItem("userId", response.data.user.idAdmin);
+
+        // Redirigir al dashboard
         this.$router.push("/dashboardAdmin");
       } catch (error) {
         if (error.response && error.response.data) {
@@ -77,7 +81,7 @@ export default {
           this.errorMessage = "Error al iniciar sesión.";
         }
       }
-    },
+    }
   },
 };
 </script>

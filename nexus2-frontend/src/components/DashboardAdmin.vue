@@ -8,26 +8,25 @@
       @click="redirectToHome" 
     />
 
-    <!-- Notificación de acceso -->
-    <div
-      v-if="showNotification"
-      :class="['notification', notificationType]"
-    >
-      <span>{{ notificationMessage }}</span>
-      <button class="close-btn" @click="closeNotification">✖</button>
-    </div>
-
     <!-- Cabecera -->
     <div class="map-header">
       <h1 class="map-title">Mapa de Habitaciones</h1>
       <p class="map-subtitle">Explora las habitaciones disponibles en el refugio.</p>
     </div>
 
-    <!-- Menú Hamburguesa -->
+    <!-- Menú Hamburguesa con Perfil -->
     <div class="hamburger-menu">
+      <!-- Emoji del perfil -->
+      <div class="profile-icon" @click="redirectToProfile">
+        👤
+      </div>
+      
+      <!-- Botón del menú hamburguesa -->
       <button class="hamburger-btn" @click="toggleMenu">
         ☰
       </button>
+      
+      <!-- Dropdown del menú -->
       <div v-if="menuOpen" class="menu-dropdown">
         <button @click="redirectToCreateAdmin">Crear Administrador</button>
         <button @click="redirectToDeleteAdmin">Eliminar Administrador</button>
@@ -41,7 +40,6 @@
         :key="room.idRoom"
         class="room-block"
         :style="{ top: `${room.y}px`, left: `${room.x}px` }"
-        @click="moveToRoom(room)"
       >
         <!-- Emoji dependiendo del tipo de habitación -->
         <div class="room-icon">
@@ -64,9 +62,6 @@ export default {
       columns: 4, // Número de columnas en la cuadrícula
       roomSize: 160, // Tamaño de cada habitación en píxeles
       userId: localStorage.getItem("userId"), // Obtener el userId del localStorage
-      notificationMessage: '',  // Mensaje de la notificación
-      notificationType: '',     // Tipo de la notificación: "success" o "error"
-      showNotification: false,  // Si se debe mostrar la notificación o no
       menuOpen: false, // Estado del menú hamburguesa
     };
   },
@@ -91,6 +86,11 @@ export default {
     redirectToDeleteAdmin() {
       this.$router.push("/deleteAdmin");
       this.menuOpen = false; // Cierra el menú
+    },
+
+    // Redirige al perfil del usuario
+    redirectToProfile() {
+      this.$router.push("/profile"); // Cambia "/profile" por la ruta de tu componente de perfil
     },
 
     // Llamada al backend para obtener las habitaciones
@@ -122,51 +122,6 @@ export default {
         return "🍳"; // Emoji de cocina
       } else {
         return "🏠"; // Emoji genérico
-      }
-    },
-
-    // Método para cerrar la notificación
-    closeNotification() {
-      this.showNotification = false;
-    },
-
-    // Lógica para mover al usuario a la habitación seleccionada
-    async moveToRoom(room) {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        alert("Debes iniciar sesión para moverte.");
-        this.$router.push("/"); // Redirige al login si no hay usuario logueado
-        return;
-      }
-
-      try {
-        const response = await axios.get("http://localhost:8000/room/access", {
-          params: {
-            idResident: userId,
-            idRoom: room.idRoom,
-          },
-        });
-
-        const message = response.data.message;
-
-        if (message === "Access granted. Welcome to the room.") {
-          this.showNotification = true;
-          this.notificationMessage = "Acceso concedido. Bienvenido a la habitación.";
-          this.notificationType = "success"; // Verde
-        } else if (message === "Access denied. You are in the wrong room.") {
-          this.showNotification = true;
-          this.notificationMessage = "Acceso denegado. Estás en la habitación equivocada.";
-          this.notificationType = "error"; // Rojo
-        } else {
-          this.showNotification = true;
-          this.notificationMessage = message;
-          this.notificationType = "error"; // Rojo por defecto
-        }
-      } catch (error) {
-        console.error("Error al verificar acceso:", error);
-        this.showNotification = true;
-        this.notificationMessage = "Ocurrió un error al intentar acceder a la habitación.";
-        this.notificationType = "error"; // Rojo
       }
     },
   },
@@ -206,47 +161,6 @@ export default {
 
 .logo:hover {
   transform: scale(1.1);
-}
-
-/* Notificación */
-.notification {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #333;
-  color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-  width: 80%;
-  max-width: 500px;
-  z-index: 999;
-}
-
-.notification.success {
-  background-color: #4CAF50; /* Verde */
-}
-
-.notification.error {
-  background-color: #f44336; /* Rojo */
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.close-btn:hover {
-  color: #ddd;
 }
 
 /* Cabecera */
@@ -313,11 +227,12 @@ export default {
 }
 
 /* Menú Hamburguesa */
-/* Menú Hamburguesa */
 .hamburger-menu {
   position: absolute;
   top: 20px;
   right: 20px;
+  display: flex;
+  align-items: center;
   z-index: 10; /* Asegura que el menú esté por encima del mapa */
 }
 
@@ -364,4 +279,16 @@ export default {
   background: #555;
 }
 
+/* Icono del perfil */
+.profile-icon {
+  display: inline-block;
+  font-size: 24px; /* Tamaño del emoji */
+  cursor: pointer;
+  margin-right: 10px; /* Espaciado entre el perfil y el menú */
+  transition: transform 0.2s ease;
+}
+
+.profile-icon:hover {
+  transform: scale(1.1); /* Efecto de agrandamiento al pasar el mouse */
+}
 </style>

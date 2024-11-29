@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard.vue';
 import DashboardAdmin from './components/DashboardAdmin.vue'; // Ajusta el path si está en otra carpeta
 import CreateAdmin from './components/CreateAdmin.vue'; 
 import DeleteAdmin from './components/DeleteAdmin.vue'; 
+import Profile from './components/Profile.vue'; 
 
 const routes = [
   {
@@ -31,6 +32,11 @@ const routes = [
     path: '/deleteAdmin',
     name: 'DeleteAdmin',
     component: DeleteAdmin,
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
   },
   {
     path: '/createAdmin',

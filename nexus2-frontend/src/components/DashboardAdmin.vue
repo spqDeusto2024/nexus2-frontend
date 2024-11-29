@@ -16,17 +16,8 @@
 
     <!-- Menú Hamburguesa con Perfil -->
     <div class="hamburger-menu">
-      <!-- Emoji del perfil -->
-      <div class="profile-icon" @click="redirectToProfile">
-        👤
-      </div>
-      
-      <!-- Botón del menú hamburguesa -->
-      <button class="hamburger-btn" @click="toggleMenu">
-        ☰
-      </button>
-      
-      <!-- Dropdown del menú -->
+      <div class="profile-icon" @click="redirectToProfile">👤</div>
+      <button class="hamburger-btn" @click="toggleMenu">☰</button>
       <div v-if="menuOpen" class="menu-dropdown">
         <button @click="redirectToCreateAdmin">Crear Administrador</button>
         <button @click="redirectToDeleteAdmin">Eliminar Administrador</button>
@@ -40,13 +31,42 @@
         :key="room.idRoom"
         class="room-block"
         :style="{ top: `${room.y}px`, left: `${room.x}px` }"
+        @mouseenter="showResidentButton(room.idRoom)"
+        @mouseleave="hideResidentButton"
       >
-        <!-- Emoji dependiendo del tipo de habitación -->
         <div class="room-icon">
           <span class="btn-icon">{{ getEmojiForRoom(room.roomName) }}</span>
         </div>
         <span class="room-name">{{ room.roomName }}</span>
-      </div>
+        
+        <!-- Botón de listar residentes (solo visible al pasar el ratón) -->
+        <button v-if="activeRoomId === room.idRoom" class="list-residents-btn" @click="fetchRoomResidents(room.idRoom)">
+          Listar Residentes
+        </button>
+      </div> 
+    </div>
+
+    <!-- Tabla de residentes -->
+    <div v-if="showResidentsTable" class="residents-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Fecha de Nacimiento</th>
+            <th>Género</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="resident in residents" :key="resident.idResident">
+            <td>{{ resident.name }}</td>
+            <td>{{ resident.surname }}</td>
+            <td>{{ resident.birthDate }}</td>
+            <td>{{ resident.gender }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <button @click="closeResidentsTable">Cerrar</button>
     </div>
   </div>
 </template>
@@ -59,10 +79,11 @@ export default {
   data() {
     return {
       rooms: [], // Almacena habitaciones obtenidas del backend
-      columns: 4, // Número de columnas en la cuadrícula
-      roomSize: 160, // Tamaño de cada habitación en píxeles
+      residents: [], // Almacena los residentes de la habitación seleccionada
+      showResidentsTable: false, // Controla la visibilidad de la tabla de residentes
       userId: localStorage.getItem("userId"), // Obtener el userId del localStorage
       menuOpen: false, // Estado del menú hamburguesa
+      activeRoomId: null, // ID de la habitación activa (para mostrar el botón "Listar Residentes")
     };
   },
   methods: {
@@ -98,14 +119,12 @@ export default {
       try {
         const response = await axios.get("http://localhost:8000/listRooms");
         this.rooms = response.data.rooms.map((room, index) => {
-          const column = index % this.columns; // Calcular la columna de la habitación
-          const row = Math.floor(index / this.columns); // Calcular la fila de la habitación
-
-          // Calcular las posiciones X y Y
+          const column = index % 4; // Calcular la columna de la habitación
+          const row = Math.floor(index / 4); // Calcular la fila de la habitación
           return {
             ...room,
-            x: column * this.roomSize,
-            y: row * this.roomSize,
+            x: column * 160,
+            y: row * 160,
           };
         });
       } catch (error) {
@@ -124,6 +143,39 @@ export default {
         return "🏠"; // Emoji genérico
       }
     },
+
+    // Muestra el botón "Listar Residentes" al pasar el ratón sobre una habitación
+    showResidentButton(idRoom) {
+      this.activeRoomId = idRoom;
+    },
+
+    // Oculta el botón "Listar Residentes" al salir el ratón de la habitación
+    hideResidentButton() {
+      this.activeRoomId = null;
+    },
+
+    // Llamada al backend para obtener los residentes de la habitación
+    async fetchRoomResidents(idRoom) {
+      try {
+        const response = await axios.get(`http://localhost:8000/room/residents?idRoom=${idRoom}`);
+        
+        if (response.data.status === "ok") {
+          this.residents = response.data.residents;
+          this.showResidentsTable = true;
+        } else {
+          alert("No se encontraron residentes para esta habitación.");
+        }
+      } catch (error) {
+        console.error("Error al obtener los residentes:", error);
+        alert("Hubo un error al cargar los residentes.");
+      }
+    },
+
+    // Cierra la tabla de residentes
+    closeResidentsTable() {
+      this.showResidentsTable = false;
+      this.residents = [];
+    },
   },
 
   // Al crear el componente, si el usuario no está logueado, lo redirigimos al login
@@ -139,6 +191,162 @@ export default {
 </script>
 
 <style scoped>
+/* Contenedor general */
+.map-container {
+  position: relative;
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Estilos de la tabla de residentes */
+.residents-table {
+  background-color: #333;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-width: 80%;
+  margin: 20px auto;
+}
+
+.residents-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.residents-table th, .residents-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #444;
+}
+
+.residents-table th {
+  background-color: #ffcc00;
+  color: #121212;
+}
+
+.residents-table tr:nth-child(even) {
+  background-color: #222;
+}
+
+.residents-table button {
+  background-color: #ffcc00;
+  color: #121212;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.residents-table button:hover {
+  background-color: #e0b800;
+}
+
+/* Contenedor del mapa */
+.map-layout {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  margin: 0 auto;
+  border-radius: 15px;
+  overflow: hidden;
+  background: url('@/assets/map-grid.png') center/cover;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.room-block {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  text-align: center;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.room-icon {
+  font-size: 2rem;
+}
+
+.room-name {
+  font-size: 1rem;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.list-residents-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #ffcc00;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.list-residents-btn:hover {
+  background-color: #e0b800;
+}
+
+/* Contenedor general */
+.map-container {
+  position: relative;
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Estilos de la tabla de residentes */
+.residents-table {
+  background-color: #333;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-width: 80%;
+  margin: 20px auto;
+}
+
+.residents-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.residents-table th, .residents-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #444;
+}
+
+.residents-table th {
+  background-color: #ffcc00;
+  color: #121212;
+}
+
+.residents-table tr:nth-child(even) {
+  background-color: #222;
+}
+
+.residents-table button {
+  background-color: #ffcc00;
+  color: #121212;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.residents-table button:hover {
+  background-color: #e0b800;
+}
+
 /* Contenedor general */
 .map-container {
   position: relative;

@@ -1,5 +1,5 @@
 <template>
-  <div class="map-container">
+  <div class="admin-container">
     <!-- Logo -->
     <img 
       src="@/assets/logo.png" 
@@ -8,7 +8,7 @@
       @click="redirectToHome" 
     />
 
-    <!-- Notificación de acceso -->
+    <!-- Notificación de acción -->
     <div
       v-if="showNotification"
       :class="['notification', notificationType]"
@@ -18,111 +18,49 @@
     </div>
 
     <!-- Cabecera -->
-    <div class="map-header">
-      <h1 class="map-title">Mapa de Habitaciones</h1>
-      <p class="map-subtitle">Explora las habitaciones disponibles en el refugio.</p>
+    <div class="admin-header">
+      <h1 class="admin-title">Gestión de Administradores</h1>
+      <p class="admin-subtitle">Administra los usuarios con privilegios en el sistema.</p>
     </div>
 
-    <!-- Menú Hamburguesa -->
-    <div class="hamburger-menu">
-      <button class="hamburger-btn" @click="toggleMenu">
-        ☰
-      </button>
-      <div v-if="menuOpen" class="menu-dropdown">
-        <button @click="redirectToCreateAdmin">Crear Administrador</button>
-        <button @click="redirectToDeleteAdmin">Eliminar Administrador</button>
-      </div>
-    </div>
-
-    <!-- Contenedor del mapa -->
-    <div class="map-layout">
-      <div
-        v-for="room in rooms"
-        :key="room.idRoom"
-        class="room-block"
-        :style="{ top: `${room.y}px`, left: `${room.x}px` }"
-        @click="moveToRoom(room)"
-      >
-        <!-- Emoji dependiendo del tipo de habitación -->
-        <div class="room-icon">
-          <span class="btn-icon">{{ getEmojiForRoom(room.roomName) }}</span>
-        </div>
-        <span class="room-name">{{ room.roomName }}</span>
-      </div>
-    </div>
+    <!-- Tabla de administradores -->
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Email</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="admin in admins" :key="admin.idAdmin">
+          <td>{{ admin.idAdmin }}</td>
+          <td>{{ admin.email }}</td>
+          <td>
+            <button class="delete-btn" @click="deleteAdmin(admin.idAdmin)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
-
 <script>
 import axios from "axios";
 
 export default {
-  name: "RoomMap",
+  name: "AdminManagement",
   data() {
     return {
-      rooms: [], // Almacena habitaciones obtenidas del backend
-      columns: 4, // Número de columnas en la cuadrícula
-      roomSize: 160, // Tamaño de cada habitación en píxeles
-      userId: localStorage.getItem("userId"), // Obtener el userId del localStorage
+      admins: [], // Lista de administradores obtenida del backend
       notificationMessage: '',  // Mensaje de la notificación
       notificationType: '',     // Tipo de la notificación: "success" o "error"
       showNotification: false,  // Si se debe mostrar la notificación o no
-      menuOpen: false, // Estado del menú hamburguesa
     };
   },
   methods: {
-    // Alterna el estado del menú hamburguesa
-    toggleMenu() {
-      this.menuOpen = !this.menuOpen;
-    },
-
     // Redirige al usuario a la página de inicio
     redirectToHome() {
       this.$router.push("/");  // Cambia "/home" por la ruta correcta en tu aplicación
-    },
-
-    // Redirige al componente Crear Administrador
-    redirectToCreateAdmin() {
-      this.$router.push("/createAdmin");
-      this.menuOpen = false; // Cierra el menú
-    },
-
-    // Redirige al componente Eliminar Administrador
-    redirectToDeleteAdmin() {
-      this.$router.push("/deleteAdmin");
-      this.menuOpen = false; // Cierra el menú
-    },
-
-    // Llamada al backend para obtener las habitaciones
-    async fetchRooms() {
-      try {
-        const response = await axios.get("http://localhost:8000/listRooms");
-        this.rooms = response.data.rooms.map((room, index) => {
-          const column = index % this.columns; // Calcular la columna de la habitación
-          const row = Math.floor(index / this.columns); // Calcular la fila de la habitación
-
-          // Calcular las posiciones X y Y
-          return {
-            ...room,
-            x: column * this.roomSize,
-            y: row * this.roomSize,
-          };
-        });
-      } catch (error) {
-        console.error("Error al obtener las habitaciones:", error);
-        alert("No se pudo cargar el mapa de habitaciones.");
-      }
-    },
-
-    // Obtiene el emoji adecuado según el nombre de la habitación
-    getEmojiForRoom(roomName) {
-      if (roomName.toLowerCase().includes("room")) {
-        return "🛏️"; // Emoji de cama
-      } else if (roomName.toLowerCase().includes("kitchen")) {
-        return "🍳"; // Emoji de cocina
-      } else {
-        return "🏠"; // Emoji genérico
-      }
     },
 
     // Método para cerrar la notificación
@@ -130,63 +68,58 @@ export default {
       this.showNotification = false;
     },
 
-    // Lógica para mover al usuario a la habitación seleccionada
-    async moveToRoom(room) {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        alert("Debes iniciar sesión para moverte.");
-        this.$router.push("/"); // Redirige al login si no hay usuario logueado
-        return;
-      }
-
+    // Obtiene la lista de administradores del backend
+    async fetchAdmins() {
       try {
-        const response = await axios.get("http://localhost:8000/room/access", {
-          params: {
-            idResident: userId,
-            idRoom: room.idRoom,
-          },
-        });
-
-        const message = response.data.message;
-
-        if (message === "Access granted. Welcome to the room.") {
-          this.showNotification = true;
-          this.notificationMessage = "Acceso concedido. Bienvenido a la habitación.";
-          this.notificationType = "success"; // Verde
-        } else if (message === "Access denied. You are in the wrong room.") {
-          this.showNotification = true;
-          this.notificationMessage = "Acceso denegado. Estás en la habitación equivocada.";
-          this.notificationType = "error"; // Rojo
+        const response = await axios.get("http://localhost:8000/admin/list");
+        if (response.data.status === "ok") {
+          this.admins = response.data.admins;
         } else {
-          this.showNotification = true;
-          this.notificationMessage = message;
-          this.notificationType = "error"; // Rojo por defecto
+          throw new Error(response.data.message);
         }
       } catch (error) {
-        console.error("Error al verificar acceso:", error);
+        console.error("Error al obtener los administradores:", error);
         this.showNotification = true;
-        this.notificationMessage = "Ocurrió un error al intentar acceder a la habitación.";
-        this.notificationType = "error"; // Rojo
+        this.notificationMessage = "Error al cargar la lista de administradores.";
+        this.notificationType = "error";
+      }
+    },
+
+    // Elimina un administrador por su ID
+    async deleteAdmin(adminId) {
+      if (confirm("¿Estás seguro de que deseas eliminar este administrador?")) {
+        try {
+          const response = await axios.delete("http://localhost:8000/admin/delete", {
+            params: { admin_id: adminId },
+          });
+
+          if (response.data.status === "ok") {
+            this.showNotification = true;
+            this.notificationMessage = "Administrador eliminado exitosamente.";
+            this.notificationType = "success";
+            this.fetchAdmins(); // Recarga la lista de administradores
+          } else {
+            throw new Error(response.data.message);
+          }
+        } catch (error) {
+          console.error("Error al eliminar al administrador:", error);
+          this.showNotification = true;
+          this.notificationMessage = "Error al intentar eliminar al administrador.";
+          this.notificationType = "error";
+        }
       }
     },
   },
 
-  // Al crear el componente, si el usuario no está logueado, lo redirigimos al login
+  // Al crear el componente, carga la lista de administradores
   created() {
-    if (!this.userId) {
-      alert("Debes iniciar sesión para acceder al mapa.");
-      this.$router.push("/"); // Redirige al login si no hay usuario logueado
-    } else {
-      this.fetchRooms(); // Si el usuario está logueado, obtenemos las habitaciones
-    }
+    this.fetchAdmins();
   },
 };
 </script>
-
 <style scoped>
 /* Contenedor general */
-.map-container {
-  position: relative;
+.admin-container {
   padding: 20px;
   min-height: 100vh;
   background-color: #121212; /* Fondo oscuro */
@@ -250,113 +183,60 @@ export default {
 }
 
 /* Cabecera */
-.map-header {
+.admin-header {
   text-align: center;
   margin-bottom: 20px;
-  color: #e0e0e0;
 }
 
-.map-title {
+.admin-title {
   font-size: 2.2rem;
   color: #ffcc00; /* Naranja para el título */
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-.map-subtitle {
+.admin-subtitle {
   font-size: 1.1rem;
   color: #bdbdbd;
 }
 
-/* Contenedor del mapa */
-.map-layout {
-  position: relative;
+/* Tabla */
+.admin-table {
   width: 100%;
-  height: 600px;
-  margin: 0 auto;
-  border-radius: 15px;
-  overflow: hidden;
-  background: url('@/assets/map-grid.png') center/cover; /* Fondo de cuadrícula */
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-collapse: collapse;
+  margin-top: 20px;
 }
 
-.room-block {
-  position: absolute;
-  width: 160px;
-  height: 160px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: #e0e0e0;
-  text-align: center;
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0.2s ease, box-shadow 0.3s;
-}
-
-.room-block:hover {
-  transform: scale(1.1);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-}
-
-.room-name {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #ffcc00;
-}
-
-.room-icon {
-  font-size: 40px;
-}
-
-/* Menú Hamburguesa */
-.hamburger-menu {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-}
-
-.hamburger-btn {
-  background: #ffcc00;
-  color: #121212;
-  font-size: 24px;
-  border: none;
-  border-radius: 5px;
+.admin-table th, .admin-table td {
+  border: 1px solid #444;
   padding: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s;
+  text-align: center;
 }
 
-.hamburger-btn:hover {
-  background: #e0b800;
-  transform: scale(1.05);
+.admin-table th {
+  background-color: #333;
+  color: #fff;
 }
 
-.menu-dropdown {
-  position: absolute;
-  top: 50px;
-  right: 0;
-  background: #333;
-  border-radius: 5px;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
+.admin-table tr:nth-child(even) {
+  background-color: #222;
 }
 
-.menu-dropdown button {
-  width: 100%;
-  padding: 10px 20px;
-  background: #444;
+.admin-table tr:hover {
+  background-color: #444;
+}
+
+/* Botón Eliminar */
+.delete-btn {
+  background-color: #f44336;
   color: #fff;
   border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
   cursor: pointer;
-  text-align: left;
   font-size: 14px;
-  transition: background 0.3s;
 }
 
-.menu-dropdown button:hover {
-  background: #555;
+.delete-btn:hover {
+  background-color: #d32f2f;
 }
 </style>

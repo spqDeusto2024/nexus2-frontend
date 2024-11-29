@@ -4,10 +4,11 @@ import ResidentLogin from './components/ResidentLogin.vue';
 import Dashboard from './components/Dashboard.vue';
 import DashboardAdmin from './components/DashboardAdmin.vue'; // Ajusta el path si está en otra carpeta
 import CreateAdmin from './components/CreateAdmin.vue'; 
+import DeleteAdmin from './components/DeleteAdmin.vue'; 
 
 const routes = [
   {
-    path: '/', // Página de inicio
+    path: '/',
     name: 'Home',
     component: Home,
   },
@@ -25,6 +26,11 @@ const routes = [
     path: '/dashboardAdmin',
     name: 'DashboardAdmin',
     component: DashboardAdmin,
+  },
+  {
+    path: '/deleteAdmin',
+    name: 'DeleteAdmin',
+    component: DeleteAdmin,
   },
   {
     path: '/createAdmin',

@@ -278,7 +278,6 @@ export default {
   background: url('@/assets/map-grid.png') center/cover; /* Fondo de cuadrícula */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.1);
-  z-index: 1; /* Asegura que el mapa esté por debajo del menú */
 }
 
 .room-block {
@@ -313,12 +312,10 @@ export default {
 }
 
 /* Menú Hamburguesa */
-/* Menú Hamburguesa */
 .hamburger-menu {
   position: absolute;
   top: 20px;
   right: 20px;
-  z-index: 10; /* Asegura que el menú esté por encima del mapa */
 }
 
 .hamburger-btn {
@@ -345,7 +342,6 @@ export default {
   border-radius: 5px;
   box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-  z-index: 9; /* Asegura que el dropdown esté sobre cualquier otro elemento */
 }
 
 .menu-dropdown button {
@@ -363,5 +359,4 @@ export default {
 .menu-dropdown button:hover {
   background: #555;
 }
-
 </style>

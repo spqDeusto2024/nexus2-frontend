@@ -8,11 +8,15 @@
       @click="redirectToHome" 
     />
 
-    <!-- Alarmas para cada máquina -->
-    <div v-for="(alarm, key) in alarms" :key="key" v-if="alarm.show" class="alarm">
-      <p>{{ alarm.message }}</p>
-      <button @click="turnOffMachine(key)">Apagar {{ alarm.machineName }}</button>
-      <button v-if="!alarm.isOn" @click="repairMachine(key)">Reparar {{ alarm.machineName }}</button>
+    <!-- Alerta de Peligro -->
+    <div v-if="showAlarm" class="alarm">
+      <p>{{ alarmMessage }}</p>
+      <button @click="turnOffMachine">Apagar Máquina</button>
+    </div>
+
+    <div v-if="machineRepair" class="repair-alert">
+      <p>⚠️ La máquina {{ currentMachine }} está apagada. Haz clic en reparar.</p>
+      <button class="repair-btn" @click="repairMachine">Reparar Máquina</button>
     </div>
 
 
@@ -173,20 +177,19 @@ export default {
 
   async turnOffMachine() {
     try {
-      // Realizamos la llamada para apagar la máquina
+      console.log("Turning off machine. Current machine:", this.currentMachine);
       const machineUrl = `http://localhost:8000/machine/off?machine_name=${this.currentMachine}`;
       await axios.put(machineUrl);
 
-      // Actualizamos el estado de la UI
       this.showAlarm = false;
       this.machineRepair = true;
+      console.log("Machine turned off, showAlarm:", this.showAlarm, "machineRepair:", this.machineRepair);
       alert("La máquina se ha apagado correctamente.");
     } catch (error) {
       console.error("Error al apagar la máquina:", error);
       alert("Hubo un error al intentar apagar la máquina.");
     }
   },
-
     // Redirige al usuario a la página de inicio
     redirectToHome() {
       this.$router.push("/");  // Cambia "/home" por la ruta correcta en tu aplicación

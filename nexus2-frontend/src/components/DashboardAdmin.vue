@@ -46,6 +46,7 @@
       <div v-if="menuOpen" class="menu-dropdown">
         <button @click="redirectToCreateAdmin">Crear Administrador</button>
         <button @click="redirectToDeleteAdmin">Eliminar Administrador</button>
+        <button @click="redirectToMachineStatus">Ver Estado de Máquinas</button> 
       </div>
     </div>
 
@@ -117,6 +118,7 @@ export default {
       showAlarm: false,
       currentMachine: "",
       machineRepair: false,
+      idAlarm: null, // ID de la alarma que se creó
     };
   },
   methods: {
@@ -148,10 +150,64 @@ export default {
         // Reseteamos el estado de la reparación
         this.machineRepair = false;
         this.currentMachine = "";
+
+        // Actualizamos la alarma
+        if (this.idAlarm) {
+          await this.updateAlarm("reparada");
+        }
+
         alert("La máquina se ha reparado correctamente.");
       } catch (error) {
         console.error("Error al reparar la máquina:", error);
         alert("Hubo un error al intentar reparar la máquina.");
+      }
+    },
+
+    async createAlarm() {
+      try {
+        console.log("Creando la alarma...");
+
+        // Realiza la solicitud para crear la alarma
+        const response = await axios.post("http://localhost:8000/alarmLevel/create", {
+          start: new Date().toISOString(),
+          end: null,
+          idRoom: 3,  // Ajusta este valor si es necesario
+          createDate: new Date().toISOString(),
+        });
+
+        // Verifica la respuesta completa de la API
+        console.log("Respuesta de la API:", response);
+
+        // Accede correctamente a `idAlarm` en la respuesta
+        if (response && response.data && response.data.idAlarm) {
+          this.idAlarm = response.data.idAlarm;
+          console.log("Alarma creada con éxito. ID:", this.idAlarm);
+        } else {
+          console.error("La respuesta no contiene el ID de la alarma.");
+        }
+
+      } catch (error) {
+        console.error("Error al crear la alarma:", error);  // Si ocurre un error, lo muestra
+      }
+    },
+
+    async updateAlarm(status) {
+      try {
+        if (!this.idAlarm) {
+          console.warn("No hay alarma para actualizar.");
+          return;
+        }
+
+        // Suponiendo que el backend espera recibir un "new_enddate" como parámetro
+        const newEndDate = new Date().toISOString();  // Generamos la fecha actual como ISOString
+
+        // Realizamos la solicitud PUT al endpoint para actualizar la alarma
+        const url = `http://localhost:8000/alarm/putEnd?idAlarm=${this.idAlarm}&new_enddate=${encodeURIComponent(newEndDate)}`;
+        const response = await axios.put(url);
+
+        console.log("Alarma actualizada:", response.data);
+      } catch (error) {
+        console.error("Error al actualizar la alarma:", error);
       }
     },
 
@@ -164,7 +220,7 @@ export default {
       
       // Para energía y agua
       if ((type === 'energy' || type === 'water') && level < 25) {
-        return 'high-level'; // Rojo si el nivel de agua o energía es menor a 25 (cambiar 'low-level' por 'high-level')
+        return 'high-level'; // Rojo si el nivel de agua o energía es menor a 25
       }
 
       // Si el nivel es normal (para cualquier otro caso)
@@ -172,14 +228,27 @@ export default {
     },
 
     async turnOffMachine() {
+      console.log("Entrando a turnOffMachine...");
       try {
-        console.log("Turning off machine. Current machine:", this.currentMachine);
         const machineUrl = `http://localhost:8000/machine/off?machine_name=${this.currentMachine}`;
-        await axios.put(machineUrl);
+        await axios.put(machineUrl);  // Apaga la máquina
 
         this.showAlarm = false;
         this.machineRepair = true;
-        console.log("Machine turned off, showAlarm:", this.showAlarm, "machineRepair:", this.machineRepair);
+        console.log("Machine turned off. showAlarm:", this.showAlarm, "machineRepair:", this.machineRepair);
+
+        // Primero crea la alarma
+        await this.createAlarm();
+
+        // Verifica que `this.idAlarm` esté correctamente asignado antes de llamar a `updateAlarm`
+        console.log("ID de la alarma creado:", this.idAlarm);
+        if (this.idAlarm) {
+          console.log("ID de alarma encontrado:", this.idAlarm);
+          await this.updateAlarm("reparada");  // Llama a la actualización de la alarma
+        } else {
+          console.error("No se pudo obtener el ID de la alarma para actualizar.");
+        }
+
         alert("La máquina se ha apagado correctamente.");
       } catch (error) {
         console.error("Error al apagar la máquina:", error);
@@ -205,13 +274,18 @@ export default {
       this.$router.push("/profile");
     },
 
+    redirectToMachineStatus() {
+      this.$router.push("/estadoMaquinas");
+      this.menuOpen = false; 
+    },
+
     async fetchRooms() {
       try {
         const response = await axios.get("http://localhost:8000/listRooms");
         this.rooms = response.data.rooms.map((room, index) => {
           const column = index % 4;
           const row = Math.floor(index / 4);
-          return {
+          return {  
             ...room,
             x: column * 160,
             y: row * 160,
@@ -277,7 +351,7 @@ export default {
 
     async fetchRoomResidents(roomId) {
       try {
-        const response = await axios.get(`http://localhost:8000/roomResidents?idRoom=${roomId}`);
+        const response = await axios.get(`http://localhost:8000/room/residents?idRoom=${roomId}`);
         this.residents = response.data.residents;
         this.showResidentsTable = true;
       } catch (error) {
@@ -293,10 +367,9 @@ export default {
   created() {
     this.fetchRooms();
     this.fetchShelterLevels();
-    setInterval(() => this.fetchShelterLevels(), 30000); // Actualiza cada 30 segundos
+    setInterval(() => this.fetchShelterLevels(), 5000); // Polling cada 5 segundos
   },
 };
-
 </script>
 
 <style scoped>

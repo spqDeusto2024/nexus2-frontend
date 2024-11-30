@@ -1,12 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Home from './components/Home.vue'; // Importa la nueva página de inicio
+import Home from './components/Home.vue'; 
 import ResidentLogin from './components/ResidentLogin.vue';
 import Dashboard from './components/Dashboard.vue';
-import DashboardAdmin from './components/DashboardAdmin.vue'; // Ajusta el path si está en otra carpeta
+import DashboardAdmin from './components/DashboardAdmin.vue';
 import CreateAdmin from './components/CreateAdmin.vue'; 
 import DeleteAdmin from './components/DeleteAdmin.vue'; 
 import Profile from './components/Profile.vue'; 
 import ResidentProfile from './components/ResidentProfile.vue';
+import EstadoMaquinas from './components/EstadoMaquinas.vue';
 
 const routes = [
   {
@@ -48,6 +49,11 @@ const routes = [
     path: '/createAdmin',
     name: 'CreateAdmin',
     component: CreateAdmin,
+  },
+  {
+    path: '/estadoMaquinas',
+    name: 'EstadoMaquinas',
+    component: EstadoMaquinas,
   },
   {
     path: '/admin-login',

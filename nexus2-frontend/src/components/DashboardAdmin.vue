@@ -8,12 +8,33 @@
       @click="redirectToHome" 
     />
 
+    <!-- Alarmas para cada máquina -->
+    <div v-for="(alarm, key) in alarms" :key="key" v-if="alarm.show" class="alarm">
+      <p>{{ alarm.message }}</p>
+      <button @click="turnOffMachine(key)">Apagar {{ alarm.machineName }}</button>
+      <button v-if="!alarm.isOn" @click="repairMachine(key)">Reparar {{ alarm.machineName }}</button>
+    </div>
+
+
+    <!-- Niveles del refugio -->
+    <div class="shelter-levels">
+      <div class="shelter-level" :class="getLevelClass(energyLevel)">
+        ⚡ {{ energyLevel }}
+      </div>
+      <div class="shelter-level" :class="getLevelClass(waterLevel)">
+        💧 {{ waterLevel }}
+      </div>
+      <div class="shelter-level" :class="getLevelClass(radiationLevel)">
+        ☢️ {{ radiationLevel }}
+      </div>
+    </div>
+
     <!-- Cabecera -->
     <div class="map-header">
       <h1 class="map-title">Mapa de Habitaciones</h1>
       <p class="map-subtitle">Explora las habitaciones disponibles en el refugio.</p>
     </div>
-
+  
     <!-- Menú Hamburguesa con Perfil -->
     <div class="hamburger-menu">
       <div class="profile-icon" @click="redirectToProfile">👤</div>
@@ -71,9 +92,9 @@
   </div>
 </template>
 
+
 <script>
 import axios from "axios";
-
 export default {
   name: "RoomMap",
   data() {
@@ -84,6 +105,14 @@ export default {
       userId: localStorage.getItem("userId"), // Obtener el userId del localStorage
       menuOpen: false, // Estado del menú hamburguesa
       activeRoomId: null, // ID de la habitación activa (para mostrar el botón "Listar Residentes")
+      energyLevel: 0, // Nivel de energía del refugio
+      waterLevel: 0, // Nivel de agua del refugio
+      radiationLevel: 0, // Nivel de radiación del refugio
+      pollingInterval: null, // Guardará el identificador del intervalo de polling
+      alarmMessage: "", // Mensaje de la alarma
+      showAlarm: false, // Controla si se muestra la alarma
+      currentMachine:"",
+      machineRepair: false,
     };
   },
   methods: {
@@ -91,6 +120,72 @@ export default {
     toggleMenu() {
       this.menuOpen = !this.menuOpen;
     },
+    async repairMachine() {
+      try {
+        // Reiniciar el nivel correspondiente
+        const levelUrl = `http://localhost:8000/shelter/${this.currentMachine}Level?new_${this.currentMachine}_level=10`;
+        await axios.put(levelUrl);
+
+        // Encender la máquina
+        const machineUrl = `http://localhost:8000/machine/on?machine_name=${this.currentMachine}`;
+        await axios.put(machineUrl);
+
+        // Actualizar estado en la UI
+        this.machineRepair = false;
+        this.currentMachine = "";
+        alert("La máquina se ha reparado correctamente.");
+      } catch (error) {
+        console.error("Error al reparar la máquina:", error);
+        alert("Hubo un error al intentar reparar la máquina.");
+      }
+    },
+
+    getLevelClass(level) {
+      if (level > 100) {
+        return 'high-level'; // Rojo si el nivel es mayor a 100
+      } else if (level < 100) {
+        return 'low-level'; // Verde si el nivel es menor a 100
+      } else {
+        return 'normal-level'; // Clase para nivel exactamente 100, si deseas
+      }
+    },
+
+    async repairMachine() {
+      try {
+        // Reiniciar el nivel correspondiente
+        const levelUrl = `http://localhost:8000/shelter/${this.currentMachine}Level?new_${this.currentMachine}_level=10`;
+        await axios.put(levelUrl);
+
+        // Encender la máquina
+        const machineUrl = `http://localhost:8000/machine/on?machine_name=${this.currentMachine}`;
+        await axios.put(machineUrl);
+
+        // Actualizar estado en la UI
+        this.machineRepair = false;
+        this.currentMachine = "";
+        alert("La máquina se ha reparado correctamente.");
+      } catch (error) {
+        console.error("Error al reparar la máquina:", error);
+        alert("Hubo un error al intentar reparar la máquina.");
+      }
+    },
+
+
+  async turnOffMachine() {
+    try {
+      // Realizamos la llamada para apagar la máquina
+      const machineUrl = `http://localhost:8000/machine/off?machine_name=${this.currentMachine}`;
+      await axios.put(machineUrl);
+
+      // Actualizamos el estado de la UI
+      this.showAlarm = false;
+      this.machineRepair = true;
+      alert("La máquina se ha apagado correctamente.");
+    } catch (error) {
+      console.error("Error al apagar la máquina:", error);
+      alert("Hubo un error al intentar apagar la máquina.");
+    }
+  },
 
     // Redirige al usuario a la página de inicio
     redirectToHome() {
@@ -135,10 +230,13 @@ export default {
 
     // Obtiene el emoji adecuado según el nombre de la habitación
     getEmojiForRoom(roomName) {
-      if (roomName.toLowerCase().includes("room")) {
+      const roomNameLower = roomName.toLowerCase(); // Convertir a minúsculas una sola vez para facilitar las comprobaciones
+      if (roomNameLower.includes("room")) {
         return "🛏️"; // Emoji de cama
-      } else if (roomName.toLowerCase().includes("kitchen")) {
+      } else if (roomNameLower.includes("kitchen")) {
         return "🍳"; // Emoji de cocina
+      } else if (roomNameLower.includes("mantenimiento") || roomNameLower.includes("maquina")) {
+        return "⚙️"; // Emoji de herramienta (máquina)
       } else {
         return "🏠"; // Emoji genérico
       }
@@ -152,6 +250,45 @@ export default {
     // Oculta el botón "Listar Residentes" al salir el ratón de la habitación
     hideResidentButton() {
       this.activeRoomId = null;
+    },
+
+    // Método para obtener los niveles del refugio
+    async fetchShelterLevels() {
+      try {
+        const [energyResponse, waterResponse, radiationResponse] = await Promise.all([
+          axios.get("http://localhost:8000/shelter/energy"),
+          axios.get("http://localhost:8000/shelter/water"),
+          axios.get("http://localhost:8000/shelter/radiation"),
+        ]);
+
+        this.energyLevel = energyResponse.data.energyLevel;
+        this.waterLevel = waterResponse.data.waterLevel;
+        this.radiationLevel = radiationResponse.data.radiationLevel;
+
+        // Comprobamos si algún nivel ha superado 100 y activamos la alarma
+        if (this.energyLevel > 100) {
+          this.showAlarm = true;
+          this.alarmMessage = "⚠️ Peligro: El nivel de energía ha superado el límite de seguridad.";
+          this.currentMachine = "energy"; 
+          this.machineRepair = false;
+        } else if (this.waterLevel > 100) {
+          this.showAlarm = true;
+          this.alarmMessage = "⚠️ Peligro: El nivel de agua ha superado el límite de seguridad.";
+          this.currentMachine = "water"; // Máquina de agua
+          this.machineRepair = false;
+        } else if (this.radiationLevel > 100) {
+          this.showAlarm = true;
+          this.alarmMessage = "⚠️ Peligro: El nivel de radiación ha superado el límite de seguridad.";
+          this.currentMachine = "radioactivity"; // Máquina de radiación
+          this.machineRepair = false;
+        } else {
+          this.showAlarm = false; // Si todos los niveles están en rango seguro
+          this.currentMachine = ""; // Resetea la máquina actual
+        }
+      } catch (error) {
+        console.error("Error al obtener los niveles del refugio:", error);
+        alert("No se pudieron cargar los niveles del refugio.");
+      }
     },
 
     // Llamada al backend para obtener los residentes de la habitación
@@ -184,10 +321,21 @@ export default {
       alert("Debes iniciar sesión para acceder al mapa.");
       this.$router.push("/"); // Redirige al login si no hay usuario logueado
     } else {
-      this.fetchRooms(); // Si el usuario está logueado, obtenemos las habitaciones
+      this.fetchRooms(); 
+      this.fetchShelterLevels(); // Si el usuario está logueado, obtenemos las habitaciones
+      // Iniciamos el polling para los niveles
+      this.pollingInterval = setInterval(this.fetchShelterLevels, 30000); // Cada 30 segundos
+    }
+  },
+
+  // Limpiamos el intervalo de polling cuando el componente se destruya
+  destroyed() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval); // Detenemos el polling
     }
   },
 };
+
 </script>
 
 <style scoped>
@@ -499,4 +647,86 @@ export default {
 .profile-icon:hover {
   transform: scale(1.1); /* Efecto de agrandamiento al pasar el mouse */
 }
+
+.shelter-levels {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.shelter-level {
+  background-color: #333;
+  padding: 10px 20px;
+  border-radius: 10px;
+  color: #ffcc00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Niveles del refugio */
+.high-level {
+  color: red; /* Rojo para niveles altos */
+  font-weight: bold;
+}
+
+.low-level {
+  color: green; /* Verde para niveles bajos */
+  font-weight: bold;
+}
+
+.normal-level {
+  color: yellow; /* Puedes cambiar esto a otro color para el nivel 100 */
+  font-weight: normal;
+}
+
+.alarm {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ff4d4d; /* Rojo fuerte para la alarma */
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.alarm button {
+  background-color: #ffcc00;
+  color: #121212;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.alarm button:hover {
+  background-color: #e0b800;
+}
+
+.repair-btn {
+  background-color: red;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 10px;
+}
+
+.repair-btn:hover {
+  background-color: darkred;
+}
+
+
 </style>

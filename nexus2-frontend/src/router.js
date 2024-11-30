@@ -6,6 +6,7 @@ import DashboardAdmin from './components/DashboardAdmin.vue'; // Ajusta el path 
 import CreateAdmin from './components/CreateAdmin.vue'; 
 import DeleteAdmin from './components/DeleteAdmin.vue'; 
 import Profile from './components/Profile.vue'; 
+import ResidentProfile from './components/ResidentProfile.vue';
 
 const routes = [
   {
@@ -37,6 +38,11 @@ const routes = [
     path: '/profile',
     name: 'Profile',
     component: Profile,
+  },
+  {
+    path: '/residentProfile',
+    name: 'ResidentProfile',
+    component: ResidentProfile,
   },
   {
     path: '/createAdmin',

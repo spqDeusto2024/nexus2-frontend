@@ -5,11 +5,6 @@
       <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
     </router-link>
 
-    <!-- Botón de perfil que redirige a /residentProfile -->
-    <router-link to="/residentProfile" class="profile-button">
-      <span class="profile-icon">👤</span> Perfil
-    </router-link>
-
     <!-- Notificación de acceso -->
     <div v-if="showNotification" :class="['notification', notificationType]">
       <span>{{ notificationMessage }}</span>
@@ -44,6 +39,7 @@
     </div>
   </div>
 </template>
+
 <script>
 import axios from "axios";
 
@@ -106,46 +102,36 @@ export default {
       }
 
       try {
-        // Paso 1: Verificar si el residente puede acceder a la habitación
+        // Verificar si el residente puede acceder a la habitación
         const accessUrl = `http://localhost:8000/room/access?idResident=${this.userId}&idRoom=${room.idRoom}`;
         const accessResponse = await axios.get(accessUrl);
 
-        const accessMessage = accessResponse.data.message || "Ocurrió un error desconocido.";
+        const accessMessage =
+          accessResponse.data.message || "Ocurrió un error desconocido.";
 
-        // Paso 2: Analizar la respuesta del backend
-        if (accessMessage.includes("denied")) {
-          // Mostrar notificación de acceso denegado
+        if (accessMessage.includes("denegado")) {
           this.showNotification = true;
           this.notificationMessage = accessMessage;
           this.notificationType = "error"; // Rojo
-          return; // Detener aquí, no realizar el PUT
+          return;
         }
 
-        if (!accessMessage.includes("granted")) {
-          // Si el mensaje no contiene "granted", asumimos que algo salió mal
-          this.showNotification = true;
-          this.notificationMessage = "Error al verificar el acceso.";
-          this.notificationType = "error";
-          return; // Detener aquí, no realizar el PUT
-        }
-
-        // Paso 3: Si el acceso es permitido, realizar el PUT para mover al residente
+        // Proceder a mover al residente
         const levelUrl = `http://localhost:8000/resident/idRoom?resident_id=${this.userId}&new_room_id=${room.idRoom}`;
         const moveResponse = await axios.put(levelUrl);
 
-        const moveMessage = moveResponse.data.message || "Error al intentar mover a la habitación.";
+        const message =
+          moveResponse.data.message || "Error al intentar mover a la habitación.";
 
-        // Analizar el resultado del PUT
-        if (moveMessage === "Room updated successfully.") {
+        if (message === "Room updated successfully.") {
           this.notificationMessage = "Te has movido a la habitación correctamente.";
           this.notificationType = "success"; // Verde
         } else {
-          this.notificationMessage = moveMessage;
+          this.notificationMessage = "Error al intentar mover a la habitación.";
           this.notificationType = "error"; // Rojo
         }
 
         this.showNotification = true;
-
       } catch (error) {
         console.error("Error al mover al usuario:", error);
         this.notificationMessage =
@@ -336,33 +322,5 @@ export default {
 .move-btn:hover {
   background-color: #e0b800;
   transform: scale(1.05);
-}
-
-/* Botón de perfil */
-.profile-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  align-items: center;
-  padding: 10px 15px;
-  background-color: #ffcc00;
-  color: #121212;
-  font-size: 14px;
-  font-weight: bold;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: transform 0.3s ease, background-color 0.3s ease;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-}
-
-.profile-button:hover {
-  background-color: #e0b800;
-  transform: scale(1.05);
-}
-
-.profile-icon {
-  margin-right: 8px;
-  font-size: 1.2rem;
 }
 </style>

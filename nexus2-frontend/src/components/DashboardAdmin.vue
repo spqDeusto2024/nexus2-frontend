@@ -19,26 +19,26 @@
       <button class="repair-btn" @click="repairMachine">Reparar Máquina</button>
     </div>
 
-
     <!-- Niveles del refugio -->
-    <div class="shelter-levels">
-      <div class="shelter-level" :class="getLevelClass(energyLevel)">
-        ⚡ {{ energyLevel }}
+      <div class="shelter-levels">
+        <div class="shelter-level" :class="getLevelClass(energyLevel, 'energy')">
+          ⚡ {{ energyLevel }}
+        </div>
+        <div class="shelter-level" :class="getLevelClass(waterLevel, 'water')">
+          💧 {{ waterLevel }}
+        </div>
+        <div class="shelter-level" :class="getLevelClass(radiationLevel, 'radiation')">
+          ☢️ {{ radiationLevel }}
+        </div>
       </div>
-      <div class="shelter-level" :class="getLevelClass(waterLevel)">
-        💧 {{ waterLevel }}
-      </div>
-      <div class="shelter-level" :class="getLevelClass(radiationLevel)">
-        ☢️ {{ radiationLevel }}
-      </div>
-    </div>
+
 
     <!-- Cabecera -->
     <div class="map-header">
       <h1 class="map-title">Mapa de Habitaciones</h1>
       <p class="map-subtitle">Explora las habitaciones disponibles en el refugio.</p>
     </div>
-  
+
     <!-- Menú Hamburguesa con Perfil -->
     <div class="hamburger-menu">
       <div class="profile-icon" @click="redirectToProfile">👤</div>
@@ -63,7 +63,7 @@
           <span class="btn-icon">{{ getEmojiForRoom(room.roomName) }}</span>
         </div>
         <span class="room-name">{{ room.roomName }}</span>
-        
+
         <!-- Botón de listar residentes (solo visible al pasar el ratón) -->
         <button v-if="activeRoomId === room.idRoom" class="list-residents-btn" @click="fetchRoomResidents(room.idRoom)">
           Listar Residentes
@@ -96,75 +96,56 @@
   </div>
 </template>
 
-
 <script>
 import axios from "axios";
+
 export default {
   name: "RoomMap",
   data() {
     return {
-      rooms: [], // Almacena habitaciones obtenidas del backend
-      residents: [], // Almacena los residentes de la habitación seleccionada
-      showResidentsTable: false, // Controla la visibilidad de la tabla de residentes
-      userId: localStorage.getItem("userId"), // Obtener el userId del localStorage
-      menuOpen: false, // Estado del menú hamburguesa
-      activeRoomId: null, // ID de la habitación activa (para mostrar el botón "Listar Residentes")
-      energyLevel: 0, // Nivel de energía del refugio
-      waterLevel: 0, // Nivel de agua del refugio
-      radiationLevel: 0, // Nivel de radiación del refugio
-      pollingInterval: null, // Guardará el identificador del intervalo de polling
-      alarmMessage: "", // Mensaje de la alarma
-      showAlarm: false, // Controla si se muestra la alarma
-      currentMachine:"",
+      rooms: [],
+      residents: [],
+      showResidentsTable: false,
+      userId: localStorage.getItem("userId"),
+      menuOpen: false,
+      activeRoomId: null,
+      energyLevel: 0,
+      waterLevel: 0,
+      radiationLevel: 0,
+      pollingInterval: null,
+      alarmMessage: "",
+      showAlarm: false,
+      currentMachine: "",
       machineRepair: false,
     };
   },
   methods: {
-    // Alterna el estado del menú hamburguesa
     toggleMenu() {
       this.menuOpen = !this.menuOpen;
     },
-    async repairMachine() {
-      try {
-        // Reiniciar el nivel correspondiente
-        const levelUrl = `http://localhost:8000/shelter/${this.currentMachine}Level?new_${this.currentMachine}_level=10`;
-        await axios.put(levelUrl);
-
-        // Encender la máquina
-        const machineUrl = `http://localhost:8000/machine/on?machine_name=${this.currentMachine}`;
-        await axios.put(machineUrl);
-
-        // Actualizar estado en la UI
-        this.machineRepair = false;
-        this.currentMachine = "";
-        alert("La máquina se ha reparado correctamente.");
-      } catch (error) {
-        console.error("Error al reparar la máquina:", error);
-        alert("Hubo un error al intentar reparar la máquina.");
-      }
-    },
-
-    getLevelClass(level) {
-      if (level > 100) {
-        return 'high-level'; // Rojo si el nivel es mayor a 100
-      } else if (level < 100) {
-        return 'low-level'; // Verde si el nivel es menor a 100
-      } else {
-        return 'normal-level'; // Clase para nivel exactamente 100, si deseas
-      }
-    },
 
     async repairMachine() {
       try {
-        // Reiniciar el nivel correspondiente
-        const levelUrl = `http://localhost:8000/shelter/${this.currentMachine}Level?new_${this.currentMachine}_level=10`;
+        let newLevel = 0;
+
+        // Asignamos los nuevos valores de nivel según el tipo de máquina
+        if (this.currentMachine === "radiation") {
+          newLevel = 20; // Para radiactividad
+        } else if (this.currentMachine === "energy") {
+          newLevel = 50; // Para energía
+        } else if (this.currentMachine === "water") {
+          newLevel = 50; // Para agua
+        }
+
+        // Realizamos la actualización de los niveles
+        const levelUrl = `http://localhost:8000/shelter/${this.currentMachine}Level?new_${this.currentMachine}_level=${newLevel}`;
         await axios.put(levelUrl);
 
-        // Encender la máquina
+        // Luego encendemos la máquina
         const machineUrl = `http://localhost:8000/machine/on?machine_name=${this.currentMachine}`;
         await axios.put(machineUrl);
 
-        // Actualizar estado en la UI
+        // Reseteamos el estado de la reparación
         this.machineRepair = false;
         this.currentMachine = "";
         alert("La máquina se ha reparado correctamente.");
@@ -175,50 +156,61 @@ export default {
     },
 
 
-  async turnOffMachine() {
-    try {
-      console.log("Turning off machine. Current machine:", this.currentMachine);
-      const machineUrl = `http://localhost:8000/machine/off?machine_name=${this.currentMachine}`;
-      await axios.put(machineUrl);
+    getLevelClass(level, type) {
+      // Para radiactividad
+      if (type === 'radiation' && level > 50) {
+        return 'high-level'; // Rojo si la radiación es mayor a 50
+      }
+      
+      // Para energía y agua
+      if ((type === 'energy' || type === 'water') && level < 25) {
+        return 'high-level'; // Rojo si el nivel de agua o energía es menor a 25 (cambiar 'low-level' por 'high-level')
+      }
 
-      this.showAlarm = false;
-      this.machineRepair = true;
-      console.log("Machine turned off, showAlarm:", this.showAlarm, "machineRepair:", this.machineRepair);
-      alert("La máquina se ha apagado correctamente.");
-    } catch (error) {
-      console.error("Error al apagar la máquina:", error);
-      alert("Hubo un error al intentar apagar la máquina.");
-    }
-  },
-    // Redirige al usuario a la página de inicio
+      // Si el nivel es normal (para cualquier otro caso)
+      return 'normal-level';
+    },
+
+    async turnOffMachine() {
+      try {
+        console.log("Turning off machine. Current machine:", this.currentMachine);
+        const machineUrl = `http://localhost:8000/machine/off?machine_name=${this.currentMachine}`;
+        await axios.put(machineUrl);
+
+        this.showAlarm = false;
+        this.machineRepair = true;
+        console.log("Machine turned off, showAlarm:", this.showAlarm, "machineRepair:", this.machineRepair);
+        alert("La máquina se ha apagado correctamente.");
+      } catch (error) {
+        console.error("Error al apagar la máquina:", error);
+        alert("Hubo un error al intentar apagar la máquina.");
+      }
+    },
+
     redirectToHome() {
-      this.$router.push("/");  // Cambia "/home" por la ruta correcta en tu aplicación
+      this.$router.push("/");
     },
 
-    // Redirige al componente Crear Administrador
     redirectToCreateAdmin() {
       this.$router.push("/createAdmin");
-      this.menuOpen = false; // Cierra el menú
+      this.menuOpen = false;
     },
 
-    // Redirige al componente Eliminar Administrador
     redirectToDeleteAdmin() {
       this.$router.push("/deleteAdmin");
-      this.menuOpen = false; // Cierra el menú
+      this.menuOpen = false;
     },
 
-    // Redirige al perfil del usuario
     redirectToProfile() {
-      this.$router.push("/profile"); // Cambia "/profile" por la ruta de tu componente de perfil
+      this.$router.push("/profile");
     },
 
-    // Llamada al backend para obtener las habitaciones
     async fetchRooms() {
       try {
         const response = await axios.get("http://localhost:8000/listRooms");
         this.rooms = response.data.rooms.map((room, index) => {
-          const column = index % 4; // Calcular la columna de la habitación
-          const row = Math.floor(index / 4); // Calcular la fila de la habitación
+          const column = index % 4;
+          const row = Math.floor(index / 4);
           return {
             ...room,
             x: column * 160,
@@ -231,31 +223,27 @@ export default {
       }
     },
 
-    // Obtiene el emoji adecuado según el nombre de la habitación
     getEmojiForRoom(roomName) {
-      const roomNameLower = roomName.toLowerCase(); // Convertir a minúsculas una sola vez para facilitar las comprobaciones
+      const roomNameLower = roomName.toLowerCase();
       if (roomNameLower.includes("room")) {
-        return "🛏️"; // Emoji de cama
+        return "🛏️";
       } else if (roomNameLower.includes("kitchen")) {
-        return "🍳"; // Emoji de cocina
+        return "🍳";
       } else if (roomNameLower.includes("mantenimiento") || roomNameLower.includes("maquina")) {
-        return "⚙️"; // Emoji de herramienta (máquina)
+        return "⚙️";
       } else {
-        return "🏠"; // Emoji genérico
+        return "🏠";
       }
     },
 
-    // Muestra el botón "Listar Residentes" al pasar el ratón sobre una habitación
     showResidentButton(idRoom) {
       this.activeRoomId = idRoom;
     },
 
-    // Oculta el botón "Listar Residentes" al salir el ratón de la habitación
     hideResidentButton() {
       this.activeRoomId = null;
     },
 
-    // Método para obtener los niveles del refugio
     async fetchShelterLevels() {
       try {
         const [energyResponse, waterResponse, radiationResponse] = await Promise.all([
@@ -268,74 +256,44 @@ export default {
         this.waterLevel = waterResponse.data.waterLevel;
         this.radiationLevel = radiationResponse.data.radiationLevel;
 
-        // Comprobamos si algún nivel ha superado 100 y activamos la alarma
-        if (this.energyLevel > 100) {
-          this.showAlarm = true;
-          this.alarmMessage = "⚠️ Peligro: El nivel de energía ha superado el límite de seguridad.";
-          this.currentMachine = "energy"; 
-          this.machineRepair = false;
-        } else if (this.waterLevel > 100) {
-          this.showAlarm = true;
-          this.alarmMessage = "⚠️ Peligro: El nivel de agua ha superado el límite de seguridad.";
-          this.currentMachine = "water"; // Máquina de agua
-          this.machineRepair = false;
-        } else if (this.radiationLevel > 100) {
+        // Aquí es donde asignamos el valor a `currentMachine` si un nivel está fuera de rango
+        if (this.radiationLevel > 50) {
           this.showAlarm = true;
           this.alarmMessage = "⚠️ Peligro: El nivel de radiación ha superado el límite de seguridad.";
-          this.currentMachine = "radioactivity"; // Máquina de radiación
-          this.machineRepair = false;
-        } else {
-          this.showAlarm = false; // Si todos los niveles están en rango seguro
-          this.currentMachine = ""; // Resetea la máquina actual
+          this.currentMachine = "radiation"; // Asigna "radiation" cuando el nivel de radiación es alto
+        } else if (this.energyLevel < 25) {
+          this.showAlarm = true;
+          this.alarmMessage = "⚠️ Peligro: El nivel de energía es bajo.";
+          this.currentMachine = "energy"; // Asigna "energy" cuando el nivel de energía es bajo
+        } else if (this.waterLevel < 25) {
+          this.showAlarm = true;
+          this.alarmMessage = "⚠️ Peligro: El nivel de agua es bajo.";
+          this.currentMachine = "water"; // Asigna "water" cuando el nivel de agua es bajo
         }
       } catch (error) {
         console.error("Error al obtener los niveles del refugio:", error);
-        alert("No se pudieron cargar los niveles del refugio.");
       }
     },
 
-    // Llamada al backend para obtener los residentes de la habitación
-    async fetchRoomResidents(idRoom) {
+    async fetchRoomResidents(roomId) {
       try {
-        const response = await axios.get(`http://localhost:8000/room/residents?idRoom=${idRoom}`);
-        
-        if (response.data.status === "ok") {
-          this.residents = response.data.residents;
-          this.showResidentsTable = true;
-        } else {
-          alert("No se encontraron residentes para esta habitación.");
-        }
+        const response = await axios.get(`http://localhost:8000/roomResidents?idRoom=${roomId}`);
+        this.residents = response.data.residents;
+        this.showResidentsTable = true;
       } catch (error) {
-        console.error("Error al obtener los residentes:", error);
-        alert("Hubo un error al cargar los residentes.");
+        console.error("Error al obtener los residentes de la habitación:", error);
       }
     },
 
-    // Cierra la tabla de residentes
     closeResidentsTable() {
       this.showResidentsTable = false;
-      this.residents = [];
     },
   },
 
-  // Al crear el componente, si el usuario no está logueado, lo redirigimos al login
   created() {
-    if (!this.userId) {
-      alert("Debes iniciar sesión para acceder al mapa.");
-      this.$router.push("/"); // Redirige al login si no hay usuario logueado
-    } else {
-      this.fetchRooms(); 
-      this.fetchShelterLevels(); // Si el usuario está logueado, obtenemos las habitaciones
-      // Iniciamos el polling para los niveles
-      this.pollingInterval = setInterval(this.fetchShelterLevels, 30000); // Cada 30 segundos
-    }
-  },
-
-  // Limpiamos el intervalo de polling cuando el componente se destruya
-  destroyed() {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval); // Detenemos el polling
-    }
+    this.fetchRooms();
+    this.fetchShelterLevels();
+    setInterval(() => this.fetchShelterLevels(), 30000); // Actualiza cada 30 segundos
   },
 };
 

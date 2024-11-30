@@ -47,6 +47,8 @@
         <button @click="redirectToCreateAdmin">Crear Administrador</button>
         <button @click="redirectToDeleteAdmin">Eliminar Administrador</button>
         <button @click="redirectToMachineStatus">Ver Estado de Máquinas</button> 
+        <button @click="redirectToCreateResident">Crear Residente</button>
+        <button @click="redirectToListResidents">Listar Residentes</button>
       </div>
     </div>
 
@@ -155,7 +157,7 @@ export default {
         if (this.idAlarm) {
           await this.updateAlarm("reparada");
         }
-        
+
         const updateMachineUrl = `http://localhost:8000/machine/update?machine_name=${this.currentMachine}`;
         await axios.put(updateMachineUrl);
 
@@ -265,6 +267,16 @@ export default {
 
     redirectToCreateAdmin() {
       this.$router.push("/createAdmin");
+      this.menuOpen = false;
+    },
+
+    redirectToCreateResident() {
+      this.$router.push("/createResident");
+      this.menuOpen = false;
+    },
+
+    redirectToListResidents() {
+      this.$router.push("/listResidents");
       this.menuOpen = false;
     },
 

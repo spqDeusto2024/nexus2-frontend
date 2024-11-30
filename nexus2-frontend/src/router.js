@@ -8,6 +8,8 @@ import DeleteAdmin from './components/DeleteAdmin.vue';
 import Profile from './components/Profile.vue'; 
 import ResidentProfile from './components/ResidentProfile.vue';
 import EstadoMaquinas from './components/EstadoMaquinas.vue';
+import CreateResident from './components/CreateResident.vue';
+import ListResidents from './components/ListResidents.vue';
 
 const routes = [
   {
@@ -25,6 +27,13 @@ const routes = [
     name: 'Dashboard',
     component: Dashboard,
   },
+
+  {
+    path: '/listResidents',
+    name: 'ListResidents',
+    component: ListResidents,
+  },
+
   {
     path: '/dashboardAdmin',
     name: 'DashboardAdmin',
@@ -49,6 +58,11 @@ const routes = [
     path: '/createAdmin',
     name: 'CreateAdmin',
     component: CreateAdmin,
+  },
+  {
+    path: '/createResident',
+    name: 'CreateResident',
+    component: CreateResident,
   },
   {
     path: '/estadoMaquinas',

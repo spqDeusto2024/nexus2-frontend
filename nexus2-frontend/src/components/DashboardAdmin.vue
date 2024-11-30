@@ -49,6 +49,7 @@
         <button @click="redirectToMachineStatus">Ver Estado de Máquinas</button> 
         <button @click="redirectToCreateResident">Crear Residente</button>
         <button @click="redirectToListResidents">Listar Residentes</button>
+        <button @click="redirectToCreateRoom">Crear habitación</button>
       </div>
     </div>
 
@@ -280,6 +281,11 @@ export default {
       this.menuOpen = false;
     },
 
+    redirectToCreateRoom() {
+      this.$router.push("/createRoom");
+      this.menuOpen = false;
+    },
+
     redirectToDeleteAdmin() {
       this.$router.push("/deleteAdmin");
       this.menuOpen = false;
@@ -314,14 +320,17 @@ export default {
 
     getEmojiForRoom(roomName) {
       const roomNameLower = roomName.toLowerCase();
-      if (roomNameLower.includes("room")) {
+      // Añadimos una condición especial para "games"
+      if (roomNameLower.includes("games")) {
+        return "🎮";  // Emoji para juegos
+      } else if (roomNameLower.includes("room")) {
         return "🛏️";
       } else if (roomNameLower.includes("kitchen")) {
         return "🍳";
       } else if (roomNameLower.includes("mantenimiento") || roomNameLower.includes("maquina")) {
         return "⚙️";
       } else {
-        return "🏠";
+        return "🏠";  // Por defecto, para otras habitaciones
       }
     },
 

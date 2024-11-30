@@ -10,6 +10,7 @@ import ResidentProfile from './components/ResidentProfile.vue';
 import EstadoMaquinas from './components/EstadoMaquinas.vue';
 import CreateResident from './components/CreateResident.vue';
 import ListResidents from './components/ListResidents.vue';
+import CreateRoom from './components/CreateRoom.vue';
 
 const routes = [
   {
@@ -64,6 +65,13 @@ const routes = [
     name: 'CreateResident',
     component: CreateResident,
   },
+
+  {
+    path: '/createRoom',
+    name: 'CreateRoom',
+    component: CreateRoom,
+  },
+
   {
     path: '/estadoMaquinas',
     name: 'EstadoMaquinas',

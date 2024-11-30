@@ -155,6 +155,9 @@ export default {
         if (this.idAlarm) {
           await this.updateAlarm("reparada");
         }
+        
+        const updateMachineUrl = `http://localhost:8000/machine/update?machine_name=${this.currentMachine}`;
+        await axios.put(updateMachineUrl);
 
         alert("La máquina se ha reparado correctamente.");
       } catch (error) {

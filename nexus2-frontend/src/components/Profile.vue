@@ -23,6 +23,7 @@
       <div v-if="menuOpen" class="menu-dropdown">
         <button @click="redirectToCreateAdmin">Crear Administrador</button>
         <button @click="redirectToDeleteAdmin">Eliminar Administrador</button>
+        <button @click="redirectToMachineStatus">Ver Estado de Máquinas</button> 
       </div>
     </div>
 
@@ -108,6 +109,10 @@ export default {
     },
     redirectToDeleteAdmin() {
       this.$router.push("/deleteAdmin");
+      this.menuOpen = false;
+    },
+    redirectToMachineStatus() {
+      this.$router.push("/estadoMaquinas");
       this.menuOpen = false;
     },
     async fetchAdminData() {

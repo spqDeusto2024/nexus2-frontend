@@ -50,6 +50,7 @@
         <button @click="redirectToCreateResident">Crear Residente</button>
         <button @click="redirectToListResidents">Listar Residentes</button>
         <button @click="redirectToCreateRoom">Crear habitación</button>
+        <button @click="redirectToListRooms">Listar habitaciones</button>
       </div>
     </div>
 
@@ -268,6 +269,11 @@ export default {
 
     redirectToCreateAdmin() {
       this.$router.push("/createAdmin");
+      this.menuOpen = false;
+    },
+
+    redirectToListRooms() {
+      this.$router.push("/listRooms");
       this.menuOpen = false;
     },
 

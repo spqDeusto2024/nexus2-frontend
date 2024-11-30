@@ -11,6 +11,7 @@ import EstadoMaquinas from './components/EstadoMaquinas.vue';
 import CreateResident from './components/CreateResident.vue';
 import ListResidents from './components/ListResidents.vue';
 import CreateRoom from './components/CreateRoom.vue';
+import ListRooms from './components/ListRooms.vue';
 
 const routes = [
   {
@@ -22,6 +23,11 @@ const routes = [
     path: '/resident-login',
     name: 'ResidentLogin',
     component: ResidentLogin,
+  },
+  {
+    path: '/listRooms',
+    name: 'ListRooms',
+    component: ListRooms,
   },
   {
     path: '/dashboard',

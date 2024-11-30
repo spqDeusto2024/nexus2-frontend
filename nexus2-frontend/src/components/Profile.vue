@@ -307,7 +307,6 @@ export default {
 }
 </style>
 
-
 <style scoped>
 /* Estilos para el formulario de edición de email */
 .edit-email-form {

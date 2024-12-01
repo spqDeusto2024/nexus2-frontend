@@ -166,13 +166,21 @@ export default {
         return;
       }
       try {
-        const url = `http://localhost:8000/resident/surname?idResident=${this.userId}&new_surname=${encodeURIComponent(this.newSurname)}`;
+        // Obtenemos el ID del residente desde el localStorage
+        const idResident = this.userId;
+
+        // Definimos la URL con los parámetros de idResident y new_surname
+        const url = `http://localhost:8000/surname/resident?idResident=${idResident}&new_surname=${encodeURIComponent(this.newSurname)}`;
+
+        // Realizamos la petición PUT para actualizar el apellido
         const response = await axios.put(url);
+
+        // Comprobamos la respuesta de la API
         if (response.data.status === "ok") {
           alert("Apellido actualizado exitosamente.");
-          this.editingSurname = false;
-          this.newSurname = "";
-          await this.fetchResidentData();
+          this.editingSurname = false;  // Cerramos el formulario de edición
+          this.newSurname = "";  // Limpiamos el campo de apellido
+          await this.fetchResidentData();  // Recargamos los datos del residente
         } else {
           alert("Error al actualizar el apellido.");
         }

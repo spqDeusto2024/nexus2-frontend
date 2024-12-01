@@ -52,6 +52,7 @@
         <button @click="redirectToCreateRoom">Crear habitación</button>
         <button @click="redirectToListRooms">Listar habitaciones</button>
         <button @click="redirectToCreateFamily">Crear familia</button>
+        <button @click="redirectToListFamily">Ver familias</button>
       </div>
     </div>
 
@@ -290,6 +291,11 @@ export default {
 
     redirectToCreateFamily(){
       this.$router.push("/createFamily");
+      this.menuOpen = false;
+    },
+
+    redirectToListFamily(){
+      this.$router.push("/listFamily");
       this.menuOpen = false;
     },
 

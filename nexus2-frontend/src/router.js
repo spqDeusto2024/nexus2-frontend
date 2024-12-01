@@ -13,6 +13,7 @@ import ListResidents from './components/ListResidents.vue';
 import CreateRoom from './components/CreateRoom.vue';
 import ListRooms from './components/ListRooms.vue';
 import CreateFamily from './components/CreateFamily.vue';
+import ListFamily from './components/ListFamily.vue';
 
 const routes = [
   {
@@ -29,6 +30,11 @@ const routes = [
     path: '/listRooms',
     name: 'ListRooms',
     component: ListRooms,
+  },
+  {
+    path: '/listFamily',
+    name: 'ListFamily',
+    component: ListFamily,
   },
   {
     path: '/dashboard',

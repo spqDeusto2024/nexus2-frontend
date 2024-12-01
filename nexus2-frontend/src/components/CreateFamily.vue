@@ -23,16 +23,14 @@
           />
         </div>
         <div class="form-group">
-          <label for="idRoom">ID de la Habitación:</label>
-          <input
-            v-model="idRoom"
-            id="idRoom"
-            type="number"
-            class="form-input"
-            placeholder="ID de la habitación"
-            required
-            min="1"
-          />
+          <label for="idRoom">Selecciona una Habitación:</label>
+          <!-- Dropdown para seleccionar habitación -->
+          <select v-model="idRoom" id="idRoom" class="form-input" required>
+            <option disabled value="">Selecciona una habitación</option>
+            <option v-for="room in rooms" :key="room.idRoom" :value="room.idRoom">
+              {{ room.roomName }}
+            </option>
+          </select>
         </div>
         <button type="submit" class="btn-submit">Crear Familia</button>
       </form>
@@ -49,11 +47,32 @@ export default {
     return {
       familyName: "",
       idRoom: "",
+      rooms: [], // Aquí almacenaremos las habitaciones obtenidas
       errorMessage: "",
       successMessage: "",
     };
   },
+  mounted() {
+    // Al montar el componente, obtenemos las habitaciones que comienzan con "Room"
+    this.fetchRooms();
+  },
   methods: {
+    async fetchRooms() {
+      try {
+        // Hacer una solicitud GET para obtener las habitaciones que comienzan con "Room"
+        const response = await axios.get("http://localhost:8000/listRooms/Room");
+
+        if (response.data.status === "ok") {
+          this.rooms = response.data.rooms; // Asignamos las habitaciones al arreglo
+        } else {
+          this.errorMessage = response.data.message;
+        }
+      } catch (error) {
+        this.errorMessage = "Error al cargar las habitaciones.";
+        console.error(error);
+      }
+    },
+
     async handleCreateFamily() {
       // Obtener el ID del administrador desde el localStorage
       const createdBy = localStorage.getItem("userId");
@@ -107,6 +126,7 @@ export default {
   },
 };
 </script>
+
 <style scoped>
 /* Estilos generales */
 .create-family-container {

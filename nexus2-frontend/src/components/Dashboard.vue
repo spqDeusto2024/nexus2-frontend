@@ -82,18 +82,18 @@ export default {
 
     // Obtiene el emoji adecuado según el nombre de la habitación
     getEmojiForRoom(roomName) {
-      const roomNameLower = roomName.toLowerCase();
-      if (roomNameLower.includes("room")) {
+        const roomNameLower = roomName.toLowerCase();
+      // Añadimos una condición especial para "games"
+      if (roomNameLower.includes("games")) {
+        return "🎮";  // Emoji para juegos
+      } else if (roomNameLower.includes("room")) {
         return "🛏️";
       } else if (roomNameLower.includes("kitchen")) {
         return "🍳";
-      } else if (
-        roomNameLower.includes("mantenimiento") ||
-        roomNameLower.includes("maquina")
-      ) {
+      } else if (roomNameLower.includes("mantenimiento") || roomNameLower.includes("maquina")) {
         return "⚙️";
       } else {
-        return "🏠";
+        return "🏠";  // Por defecto, para otras habitaciones
       }
     },
 

@@ -201,14 +201,38 @@ export default {
         alert("Por favor, ingresa una nueva fecha de nacimiento.");
         return;
       }
+      
       try {
-        const url = `http://localhost:8000/resident/birthDate?idResident=${this.userId}&new_birthDate=${encodeURIComponent(this.newBirthDate)}`;
+        // Validamos que la fecha esté en el formato correcto
+        const dateParts = this.newBirthDate.split('-');
+        if (dateParts.length !== 3) {
+          alert("Formato de fecha incorrecto. Usa el formato yyyy-mm-dd.");
+          return;
+        }
+
+        const year = dateParts[0];
+        const month = dateParts[1];
+        const day = dateParts[2];
+
+        // Validar que la fecha esté dentro de los rangos válidos para año, mes y día
+        const date = new Date(this.newBirthDate);
+        if (date.getFullYear() !== parseInt(year) || date.getMonth() + 1 !== parseInt(month) || date.getDate() !== parseInt(day)) {
+          alert("Fecha inválida. Verifica la fecha de nacimiento.");
+          return;
+        }
+
+        // Aquí preparamos la URL para enviar al backend
+        const url = `http://localhost:8000/birthDate/resident?idResident=${this.userId}&new_birthDate=${encodeURIComponent(this.newBirthDate)}`;
+        
+        // Realizamos la petición PUT para actualizar la fecha de nacimiento
         const response = await axios.put(url);
+
+        // Comprobamos la respuesta de la API
         if (response.data.status === "ok") {
           alert("Fecha de nacimiento actualizada exitosamente.");
-          this.editingBirthDate = false;
-          this.newBirthDate = "";
-          await this.fetchResidentData();
+          this.editingBirthDate = false;  // Cerramos el formulario de edición
+          this.newBirthDate = "";  // Limpiamos el campo de la fecha
+          await this.fetchResidentData();  // Recargamos los datos del residente
         } else {
           alert("Error al actualizar la fecha de nacimiento.");
         }

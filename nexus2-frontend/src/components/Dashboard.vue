@@ -5,6 +5,32 @@
       <img src="@/assets/logo.png" alt="Logo Nexus2" class="logo" />
     </router-link>
 
+      <!-- Búsqueda de residente -->
+    <div class="search-container">
+      <input 
+        v-model="searchName" 
+        type="text" 
+        placeholder="Nombre"
+        class="search-input" 
+      />
+      <input 
+        v-model="searchSurname" 
+        type="text" 
+        placeholder="Apellido" 
+        class="search-input" 
+      />
+      <button @click="searchResident" class="search-btn">Buscar</button>
+    </div>
+
+    <!-- Mensaje de resultado de búsqueda -->
+    <div v-if="searchResult" class="search-result">
+      <p>
+        La persona se encuentra en la habitación: 
+        <span class="green-text">{{ searchResult.room.roomName }}</span>
+        <button class="close-btn" @click="closeResult">×</button>
+      </p>
+    </div>
+    
     <!-- Botón de perfil que redirige a /residentProfile -->
     <router-link to="/residentProfile" class="profile-button">
       <span class="profile-icon">👤</span> Perfil
@@ -58,9 +84,43 @@ export default {
       notificationMessage: "", // Mensaje de la notificación
       notificationType: "", // Tipo de la notificación: "success" o "error"
       showNotification: false, // Si se debe mostrar la notificación o no
+      searchName: "",
+      searchSurname: "",
+      searchResult: null,
     };
   },
   methods: {
+
+    async searchResident() {
+      if (this.searchName.trim() === "" || this.searchSurname.trim() === "") {
+        alert("Por favor, ingrese tanto el nombre como el apellido.");
+        return;
+      }
+      try {
+        const response = await axios.get(`http://localhost:8000/resident/search`, {
+          params: {
+            name: this.searchName,
+            surname: this.searchSurname
+          }
+        });
+
+        if (response.data.status === "ok" && response.data.room) {
+          this.searchResult = response.data; // Guardamos el resultado en searchResult
+        } else {
+          this.searchResult = null;
+          alert("No se encontró ningún residente con esos datos.");
+        }
+      } catch (error) {
+        console.error("Error al buscar al residente:", error);
+        alert("Hubo un error al realizar la búsqueda.");
+      }
+    },
+
+    // Método para cerrar el mensaje de búsqueda
+    closeResult() {
+      this.searchResult = null; // Cerramos el mensaje al poner searchResult a null
+    },
+
     // Llamada al backend para obtener las habitaciones
     async fetchRooms() {
       try {
@@ -365,4 +425,70 @@ export default {
   margin-right: 8px;
   font-size: 1.2rem;
 }
+
+.search-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.search-input {
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 150px;
+}
+
+.search-btn {
+  padding: 10px 20px;
+  background-color: #4caf50; /* Verde */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.search-btn:hover {
+  background-color: #45a049;
+}
+
+/* Estilo para el mensaje de búsqueda exitosa */
+.search-result {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #4caf50; /* Verde */
+  position: relative; /* Para posicionar el botón de cierre */
+  padding: 10px;
+  border: 1px solid #4caf50;
+  background-color: #e8f5e9;
+  border-radius: 5px;
+  max-width: 400px;
+  margin: 10px auto;
+}
+
+.green-text {
+  font-weight: bold;
+  color: #28a745;
+}
+
+.close-btn {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #28a745;
+  font-size: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.close-btn:hover {
+  color: #d32f2f; /* Rojo para el hover */
+}
+
 </style>

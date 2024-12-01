@@ -130,13 +130,21 @@ export default {
         return;
       }
       try {
-        const url = `http://localhost:8000/resident/name?idResident=${this.userId}&new_name=${encodeURIComponent(this.newName)}`;
+        // Obtenemos el ID del residente desde el localStorage
+        const idResident = this.userId;
+        
+        // Definimos la URL con los parámetros de idResident y new_name
+        const url = `http://localhost:8000/name/resident?idResident=${idResident}&new_name=${encodeURIComponent(this.newName)}`;
+
+        // Realizamos la petición PUT para actualizar el nombre
         const response = await axios.put(url);
+
+        // Comprobamos la respuesta de la API
         if (response.data.status === "ok") {
           alert("Nombre actualizado exitosamente.");
-          this.editingName = false;
-          this.newName = "";
-          await this.fetchResidentData();
+          this.editingName = false;  // Cerramos el formulario de edición
+          this.newName = "";  // Limpiamos el campo de nombre
+          await this.fetchResidentData();  // Recargamos los datos del residente
         } else {
           alert("Error al actualizar el nombre.");
         }

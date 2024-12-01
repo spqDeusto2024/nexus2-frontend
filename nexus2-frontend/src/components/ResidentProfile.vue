@@ -253,14 +253,29 @@ export default {
         alert("Por favor, ingresa un nuevo género.");
         return;
       }
+
       try {
-        const url = `http://localhost:8000/resident/gender?idResident=${this.userId}&new_gender=${encodeURIComponent(this.newGender)}`;
+        // Obtenemos el ID del residente desde el localStorage
+        const idResident = this.userId;
+
+        // Validamos que el idResident esté presente
+        if (!idResident) {
+          alert("No se ha encontrado el ID del residente.");
+          return;
+        }
+
+        // Definimos la URL con los parámetros de idResident y new_gender
+        const url = `http://localhost:8000/gender/resident?idResident=${idResident}&new_gender=${encodeURIComponent(this.newGender)}`;
+
+        // Realizamos la petición PUT para actualizar el género
         const response = await axios.put(url);
+
+        // Comprobamos la respuesta de la API
         if (response.data.status === "ok") {
           alert("Género actualizado exitosamente.");
-          this.editingGender = false;
-          this.newGender = "";
-          await this.fetchResidentData();
+          this.editingGender = false;  // Cerramos el formulario de edición
+          this.newGender = "";  // Limpiamos el campo de género
+          await this.fetchResidentData();  // Recargamos los datos del residente
         } else {
           alert("Error al actualizar el género.");
         }
@@ -269,6 +284,7 @@ export default {
         alert("Hubo un error al intentar actualizar el género.");
       }
     },
+    
     cancelEditGender() {
       this.editingGender = false;
       this.newGender = "";

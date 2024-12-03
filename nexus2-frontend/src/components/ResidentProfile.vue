@@ -101,7 +101,7 @@ export default {
   },
   methods: {
     redirectToHome() {
-      this.$router.push("/");
+      this.$router.push("/dashboard");
     },
     async fetchResidentData() {
       try {

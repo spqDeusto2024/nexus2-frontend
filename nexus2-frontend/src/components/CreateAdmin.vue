@@ -69,7 +69,7 @@ export default {
   methods: {
     // Método que redirige al home (página principal)
     goToHome() {
-      this.$router.push('/');  // Redirige a la página de inicio (home)
+      this.$router.push('/dashboardAdmin');  // Redirige a la página de inicio (home)
     },
 
     // Método para manejar la creación de administrador

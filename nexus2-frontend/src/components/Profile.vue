@@ -101,7 +101,7 @@ export default {
       this.menuOpen = !this.menuOpen;
     },
     redirectToHome() {
-      this.$router.push("/");
+      this.$router.push("/dashboard");
     },
     redirectToCreateAdmin() {
       this.$router.push("/createAdmin");

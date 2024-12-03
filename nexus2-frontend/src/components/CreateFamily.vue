@@ -5,7 +5,7 @@
       src="@/assets/logo.png"
       alt="Logo Nexus2"
       class="logo"
-      @click="$router.push('/')" 
+      @click="$router.push('/dashboardAdmin')" 
     />
 
     <div class="create-family-card">

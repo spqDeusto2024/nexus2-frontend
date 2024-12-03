@@ -60,7 +60,7 @@ export default {
   methods: {
     // Redirige al usuario a la página de inicio
     redirectToHome() {
-      this.$router.push("/");  // Cambia "/home" por la ruta correcta en tu aplicación
+      this.$router.push("/dashboardAdmin");  // Cambia "/home" por la ruta correcta en tu aplicación
     },
 
     // Método para cerrar la notificación

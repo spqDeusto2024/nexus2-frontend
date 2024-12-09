@@ -14,6 +14,7 @@ import CreateRoom from './components/CreateRoom.vue';
 import ListRooms from './components/ListRooms.vue';
 import CreateFamily from './components/CreateFamily.vue';
 import ListFamily from './components/ListFamily.vue';
+import ViewAdmin from './components/ViewAdmin.vue'; 
 
 const routes = [
   {
@@ -55,8 +56,8 @@ const routes = [
   },
   {
     path: '/deleteAdmin',
-    name: 'DeleteAdmin',
-    component: DeleteAdmin,
+    name: 'ViewAdmin',
+    component: ViewAdmin,
   },
   {
     path: '/profile',

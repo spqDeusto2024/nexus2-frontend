@@ -4,7 +4,6 @@ import ResidentLogin from './components/ResidentLogin.vue';
 import Dashboard from './components/Dashboard.vue';
 import DashboardAdmin from './components/DashboardAdmin.vue';
 import CreateAdmin from './components/CreateAdmin.vue'; 
-import DeleteAdmin from './components/DeleteAdmin.vue'; 
 import Profile from './components/Profile.vue'; 
 import ResidentProfile from './components/ResidentProfile.vue';
 import EstadoMaquinas from './components/EstadoMaquinas.vue';

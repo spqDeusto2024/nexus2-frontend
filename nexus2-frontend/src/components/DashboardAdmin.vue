@@ -8,7 +8,7 @@
       @click="redirectToHome" 
     />
 
-  <!-- Búsqueda de residente -->
+    <!-- Búsqueda de residente -->
     <div class="search-container">
       <input 
         v-model="searchName" 
@@ -46,18 +46,17 @@
     </div>
 
     <!-- Niveles del refugio -->
-      <div class="shelter-levels">
-        <div class="shelter-level" :class="getLevelClass(energyLevel, 'energy')">
-          ⚡ {{ energyLevel }}
-        </div>
-        <div class="shelter-level" :class="getLevelClass(waterLevel, 'water')">
-          💧 {{ waterLevel }}
-        </div>
-        <div class="shelter-level" :class="getLevelClass(radiationLevel, 'radiation')">
-          ☢️ {{ radiationLevel }}
-        </div>
+    <div class="shelter-levels">
+      <div class="shelter-level" :class="getLevelClass(energyLevel, 'energy')">
+        ⚡ {{ energyLevel }}
       </div>
-
+      <div class="shelter-level" :class="getLevelClass(waterLevel, 'water')">
+        💧 {{ waterLevel }}
+      </div>
+      <div class="shelter-level" :class="getLevelClass(radiationLevel, 'radiation')">
+        ☢️ {{ radiationLevel }}
+      </div>
+    </div>
 
     <!-- Cabecera -->
     <div class="map-header">
@@ -145,16 +144,55 @@ export default {
       energyLevel: 0,
       waterLevel: 0,
       radiationLevel: 0,
-      pollingInterval: null,
-      alarmMessage: "",
       showAlarm: false,
+      alarmMessage: "",
       currentMachine: "",
       machineRepair: false,
-      idAlarm: null, // ID de la alarma que se creó
+      idAlarm: null, // ID de la alarma
       searchName: "",
       searchSurname: "",
-      searchResult: null 
+      searchResult: null,
     };
+  },
+  computed: {
+    // Computed properties to handle level alerts
+    isEnergyLow() {
+      return this.energyLevel < 25;
+    },
+    isWaterLow() {
+      return this.waterLevel < 25;
+    },
+    isRadiationHigh() {
+      return this.radiationLevel > 50;
+    },
+    alarmStatus() {
+      if (this.isRadiationHigh) {
+        return { message: "⚠️ Peligro: El nivel de radiación ha superado el límite de seguridad.", machine: "radiation" };
+      } else if (this.isEnergyLow) {
+        return { message: "⚠️ Peligro: El nivel de energía es bajo.", machine: "energy" };
+      } else if (this.isWaterLow) {
+        return { message: "⚠️ Peligro: El nivel de agua es bajo.", machine: "water" };
+      }
+      return null;
+    }
+  },
+  watch: {
+    // Detecta cambios en alarmStatus y maneja la lógica de activación/desactivación
+    alarmStatus(newVal) {
+      if (newVal) {
+        if (!this.idAlarm) {
+          this.createAlarm(); // Solo crea la alarma si no hay una activa
+        }
+        this.showAlarm = true;
+        this.alarmMessage = newVal.message;
+        this.currentMachine = newVal.machine;
+      } else {
+        if (this.idAlarm) {
+          this.updateAlarm("desactivada"); // Si la alarma se desactiva, actualiza el estado
+        }
+        this.showAlarm = false;
+      }
+    }
   },
   methods: {
     toggleMenu() {
@@ -175,7 +213,7 @@ export default {
         });
 
         if (response.data.status === "ok" && response.data.room) {
-          this.searchResult = response.data; // Guardamos el resultado en searchResult
+          this.searchResult = response.data; 
         } else {
           this.searchResult = null;
           alert("No se encontró ningún residente con esos datos.");
@@ -188,42 +226,34 @@ export default {
 
     // Método para cerrar el mensaje de búsqueda
     closeResult() {
-      this.searchResult = null; // Cerramos el mensaje al poner searchResult a null
+      this.searchResult = null;
     },
 
-
+    // Método de reparación de máquina
     async repairMachine() {
       try {
         let newLevel = 0;
 
-        // Asignamos los nuevos valores de nivel según el tipo de máquina
         if (this.currentMachine === "radiation") {
-          newLevel = 20; // Para radiactividad
+          newLevel = 20;
         } else if (this.currentMachine === "energy") {
-          newLevel = 50; // Para energía
+          newLevel = 50;
         } else if (this.currentMachine === "water") {
-          newLevel = 50; // Para agua
+          newLevel = 50;
         }
 
-        // Realizamos la actualización de los niveles
         const levelUrl = `http://localhost:8000/shelter/${this.currentMachine}Level?new_${this.currentMachine}_level=${newLevel}`;
         await axios.put(levelUrl);
 
-        // Luego encendemos la máquina
         const machineUrl = `http://localhost:8000/machine/on?machine_name=${this.currentMachine}`;
         await axios.put(machineUrl);
 
-        // Reseteamos el estado de la reparación
         this.machineRepair = false;
         this.currentMachine = "";
 
-        // Actualizamos la alarma
         if (this.idAlarm) {
           await this.updateAlarm("reparada");
         }
-
-        const updateMachineUrl = `http://localhost:8000/machine/update?machine_name=${this.currentMachine}`;
-        await axios.put(updateMachineUrl);
 
         alert("La máquina se ha reparado correctamente.");
       } catch (error) {
@@ -232,90 +262,20 @@ export default {
       }
     },
 
-    async createAlarm() {
-      try {
-        console.log("Creando la alarma...");
-
-        // Realiza la solicitud para crear la alarma
-        const response = await axios.post("http://localhost:8000/alarmLevel/create", {
-          start: new Date().toISOString(),
-          end: null,
-          idRoom: 3,  // Ajusta este valor si es necesario
-          createDate: new Date().toISOString(),
-        });
-
-        // Verifica la respuesta completa de la API
-        console.log("Respuesta de la API:", response);
-
-        // Accede correctamente a `idAlarm` en la respuesta
-        if (response && response.data && response.data.idAlarm) {
-          this.idAlarm = response.data.idAlarm;
-          console.log("Alarma creada con éxito. ID:", this.idAlarm);
-        } else {
-          console.error("La respuesta no contiene el ID de la alarma.");
-        }
-
-      } catch (error) {
-        console.error("Error al crear la alarma:", error);  // Si ocurre un error, lo muestra
-      }
-    },
-
-    async updateAlarm(status) {
-      try {
-        if (!this.idAlarm) {
-          console.warn("No hay alarma para actualizar.");
-          return;
-        }
-
-        // Suponiendo que el backend espera recibir un "new_enddate" como parámetro
-        const newEndDate = new Date().toISOString();  // Generamos la fecha actual como ISOString
-
-        // Realizamos la solicitud PUT al endpoint para actualizar la alarma
-        const url = `http://localhost:8000/alarm/putEnd?idAlarm=${this.idAlarm}&new_enddate=${encodeURIComponent(newEndDate)}`;
-        const response = await axios.put(url);
-
-        console.log("Alarma actualizada:", response.data);
-      } catch (error) {
-        console.error("Error al actualizar la alarma:", error);
-      }
-    },
-
-
-    getLevelClass(level, type) {
-      // Para radiactividad
-      if (type === 'radiation' && level > 50) {
-        return 'high-level'; // Rojo si la radiación es mayor a 50
-      }
-      
-      // Para energía y agua
-      if ((type === 'energy' || type === 'water') && level < 25) {
-        return 'high-level'; // Rojo si el nivel de agua o energía es menor a 25
-      }
-
-      // Si el nivel es normal (para cualquier otro caso)
-      return 'normal-level';
-    },
-
+    // Método para apagar la máquina (apaga la máquina que causa el peligro)
     async turnOffMachine() {
       console.log("Entrando a turnOffMachine...");
       try {
         const machineUrl = `http://localhost:8000/machine/off?machine_name=${this.currentMachine}`;
-        await axios.put(machineUrl);  // Apaga la máquina
+        await axios.put(machineUrl);
 
         this.showAlarm = false;
         this.machineRepair = true;
-        console.log("Machine turned off. showAlarm:", this.showAlarm, "machineRepair:", this.machineRepair);
 
-        // Primero crea la alarma
-        await this.createAlarm();
+        await this.createAlarm(); // Crea una nueva alarma si se apaga la máquina
 
-        // Verifica que `this.idAlarm` esté correctamente asignado antes de llamar a `updateAlarm`
-        console.log("ID de la alarma creado:", this.idAlarm);
         if (this.idAlarm) {
-          console.log("ID de alarma encontrado:", this.idAlarm);
-          await this.updateAlarm("reparada");  // Llama a la actualización de la alarma
-        } else {
-          console.error("No se pudo obtener el ID de la alarma para actualizar.");
+          await this.updateAlarm("reparada");
         }
 
         alert("La máquina se ha apagado correctamente.");
@@ -325,59 +285,56 @@ export default {
       }
     },
 
-    redirectToHome() {
-      this.$router.push("/");
+    // Crear una nueva alarma
+    async createAlarm() {
+      try {
+        const response = await axios.post("http://localhost:8000/alarmLevel/create", {
+          start: new Date().toISOString(),
+          end: null,
+          idRoom: 3, // Aquí deberías especificar el id correcto de la habitación
+          createDate: new Date().toISOString(),
+        });
+
+        if (response && response.data && response.data.idAlarm) {
+          this.idAlarm = response.data.idAlarm;
+        } else {
+          console.error("La respuesta no contiene el ID de la alarma.");
+        }
+      } catch (error) {
+        console.error("Error al crear la alarma:", error);
+      }
     },
 
-    redirectToCreateAdmin() {
-      this.$router.push("/createAdmin");
-      this.menuOpen = false;
+    // Actualizar la alarma con su estado final
+    async updateAlarm(status) {
+      try {
+        if (!this.idAlarm) {
+          console.warn("No hay alarma para actualizar.");
+          return;
+        }
+
+        const newEndDate = new Date().toISOString();
+        const url = `http://localhost:8000/alarm/putEnd?idAlarm=${this.idAlarm}&new_enddate=${encodeURIComponent(newEndDate)}&status=${status}`;
+        await axios.put(url);
+      } catch (error) {
+        console.error("Error al actualizar la alarma:", error);
+      }
     },
 
-    redirectToListRooms() {
-      this.$router.push("/listRooms");
-      this.menuOpen = false;
+    // Método para obtener la clase CSS adecuada según el nivel de los parámetros
+    getLevelClass(level, type) {
+      if (type === 'radiation' && level > 50) {
+        return 'high-level'; 
+      }
+      
+      if ((type === 'energy' || type === 'water') && level < 25) {
+        return 'high-level'; 
+      }
+
+      return 'normal-level';
     },
 
-    redirectToCreateResident() {
-      this.$router.push("/createResident");
-      this.menuOpen = false;
-    },
-
-    redirectToListResidents() {
-      this.$router.push("/listResidents");
-      this.menuOpen = false;
-    },
-
-    redirectToCreateFamily(){
-      this.$router.push("/createFamily");
-      this.menuOpen = false;
-    },
-
-    redirectToListFamily(){
-      this.$router.push("/listFamily");
-      this.menuOpen = false;
-    },
-
-    redirectToCreateRoom() {
-      this.$router.push("/createRoom");
-      this.menuOpen = false;
-    },
-
-    redirectToDeleteAdmin() {
-      this.$router.push("/deleteAdmin");
-      this.menuOpen = false;
-    },
-
-    redirectToProfile() {
-      this.$router.push("/profile");
-    },
-
-    redirectToMachineStatus() {
-      this.$router.push("/estadoMaquinas");
-      this.menuOpen = false; 
-    },
-
+    // Método para obtener las habitaciones
     async fetchRooms() {
       try {
         const response = await axios.get("http://localhost:8000/listRooms");
@@ -396,20 +353,14 @@ export default {
       }
     },
 
+    // Obtener el emoji adecuado para cada habitación
     getEmojiForRoom(roomName) {
       const roomNameLower = roomName.toLowerCase();
-      // Añadimos una condición especial para "games"
-      if (roomNameLower.includes("games")) {
-        return "🎮";  // Emoji para juegos
-      } else if (roomNameLower.includes("room")) {
-        return "🛏️";
-      } else if (roomNameLower.includes("kitchen")) {
-        return "🍳";
-      } else if (roomNameLower.includes("mantenimiento") || roomNameLower.includes("maquina")) {
-        return "⚙️";
-      } else {
-        return "🏠";  // Por defecto, para otras habitaciones
-      }
+      if (roomNameLower.includes("games")) return "🎮";
+      if (roomNameLower.includes("room")) return "🛏️";
+      if (roomNameLower.includes("kitchen")) return "🍳";
+      if (roomNameLower.includes("mantenimiento") || roomNameLower.includes("maquina")) return "⚙️";
+      return "🏠";
     },
 
     showResidentButton(idRoom) {
@@ -420,6 +371,7 @@ export default {
       this.activeRoomId = null;
     },
 
+    // Fetch Shelter Levels every 5 seconds
     async fetchShelterLevels() {
       try {
         const [energyResponse, waterResponse, radiationResponse] = await Promise.all([
@@ -431,26 +383,12 @@ export default {
         this.energyLevel = energyResponse.data.energyLevel;
         this.waterLevel = waterResponse.data.waterLevel;
         this.radiationLevel = radiationResponse.data.radiationLevel;
-
-        // Aquí es donde asignamos el valor a `currentMachine` si un nivel está fuera de rango
-        if (this.radiationLevel > 50) {
-          this.showAlarm = true;
-          this.alarmMessage = "⚠️ Peligro: El nivel de radiación ha superado el límite de seguridad.";
-          this.currentMachine = "radiation"; // Asigna "radiation" cuando el nivel de radiación es alto
-        } else if (this.energyLevel < 25) {
-          this.showAlarm = true;
-          this.alarmMessage = "⚠️ Peligro: El nivel de energía es bajo.";
-          this.currentMachine = "energy"; // Asigna "energy" cuando el nivel de energía es bajo
-        } else if (this.waterLevel < 25) {
-          this.showAlarm = true;
-          this.alarmMessage = "⚠️ Peligro: El nivel de agua es bajo.";
-          this.currentMachine = "water"; // Asigna "water" cuando el nivel de agua es bajo
-        }
       } catch (error) {
         console.error("Error al obtener los niveles del refugio:", error);
       }
     },
 
+    // Método para obtener los residentes de una habitación
     async fetchRoomResidents(roomId) {
       try {
         const response = await axios.get(`http://localhost:8000/room/residents?idRoom=${roomId}`);
@@ -461,6 +399,7 @@ export default {
       }
     },
 
+    // Cerrar la tabla de residentes
     closeResidentsTable() {
       this.showResidentsTable = false;
     },
@@ -473,6 +412,8 @@ export default {
   },
 };
 </script>
+
+
 
 <style scoped>
 .search-container {

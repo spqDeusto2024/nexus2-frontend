@@ -402,8 +402,61 @@ export default {
     // Cerrar la tabla de residentes
     closeResidentsTable() {
       this.showResidentsTable = false;
+      },
     },
-  },
+
+    redirectToHome() {
+      this.$router.push("/");
+    },
+
+    redirectToCreateAdmin() {
+      this.$router.push("/createAdmin");
+      this.menuOpen = false;
+    },
+
+    redirectToListRooms() {
+      this.$router.push("/listRooms");
+      this.menuOpen = false;
+    },
+
+    redirectToCreateResident() {
+      this.$router.push("/createResident");
+      this.menuOpen = false;
+    },
+
+    redirectToListResidents() {
+      this.$router.push("/listResidents");
+      this.menuOpen = false;
+    },
+
+    redirectToCreateFamily(){
+      this.$router.push("/createFamily");
+      this.menuOpen = false;
+    },
+
+    redirectToListFamily(){
+      this.$router.push("/listFamily");
+      this.menuOpen = false;
+    },
+
+    redirectToCreateRoom() {
+      this.$router.push("/createRoom");
+      this.menuOpen = false;
+    },
+
+    redirectToDeleteAdmin() {
+      this.$router.push("/deleteAdmin");
+      this.menuOpen = false;
+    },
+
+    redirectToProfile() {
+      this.$router.push("/profile");
+    },
+
+    redirectToMachineStatus() {
+      this.$router.push("/estadoMaquinas");
+      this.menuOpen = false; 
+    },
 
   created() {
     this.fetchRooms();
@@ -411,9 +464,8 @@ export default {
     setInterval(() => this.fetchShelterLevels(), 5000); // Polling cada 5 segundos
   },
 };
+
 </script>
-
-
 
 <style scoped>
 .search-container {

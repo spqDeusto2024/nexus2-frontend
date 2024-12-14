@@ -15,4 +15,4 @@ services:
 
 networks:
   fastapi_nexus2:
-    external: true                     # Usa la red externa
+    external: false

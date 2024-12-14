@@ -14,13 +14,6 @@
       <p class="profile-subtitle">Visualiza y edita los datos del administrador.</p>
     </div>
 
-    <!-- Menú Hamburguesa -->
-    <div class="hamburger-menu">
-      <button class="hamburger-btn" @click="toggleMenu">
-        ☰
-      </button>
-    </div>
-
     <!-- Datos del Administrador -->
     <div class="admin-info">
       <div class="info-field">

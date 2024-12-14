@@ -19,12 +19,6 @@
       <button class="hamburger-btn" @click="toggleMenu">
         ☰
       </button>
-      
-      <div v-if="menuOpen" class="menu-dropdown">
-        <button @click="redirectToCreateAdmin">Crear Administrador</button>
-        <button @click="redirectToDeleteAdmin">Eliminar Administrador</button>
-        <button @click="redirectToMachineStatus">Ver Estado de Máquinas</button> 
-      </div>
     </div>
 
     <!-- Datos del Administrador -->
@@ -101,7 +95,7 @@ export default {
       this.menuOpen = !this.menuOpen;
     },
     redirectToHome() {
-      this.$router.push("/dashboard");
+      this.$router.push("/dashboardAdmin");
     },
     redirectToCreateAdmin() {
       this.$router.push("/createAdmin");

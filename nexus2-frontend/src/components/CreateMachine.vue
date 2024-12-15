@@ -55,52 +55,48 @@ export default {
   },
   methods: {
     async handleCreateMachine() {
-      // Obtener el ID del administrador desde el localStorage
       const createdBy = localStorage.getItem("userId");
-      console.log("Admin ID:", createdBy);
 
       if (!createdBy) {
         this.errorMessage = "No se ha encontrado un administrador logueado.";
         return;
       }
 
-      // Crear la fecha actual para 'createDate'
-      const currentDate = new Date().toISOString().split('T')[0]; // Formato yyyy-mm-dd
+      // Crear la fecha actual en formato "YYYY-MM-DD" (solo fecha sin hora)
+      const currentDate = new Date().toISOString().split('T')[0];
 
-      // Construir el objeto con los datos de la máquina
+      // Construir el objeto de datos con los tipos correctos
       const machineData = {
-        machineName: this.machineName,
-        idRoom: this.idRoom,
-        createdBy: createdBy,
-        createDate: currentDate,  // Fecha actual en formato yyyy-mm-dd
-        update: null,             // 'update' es opcional, lo dejamos como null
-        idMachine: null,          // Si no tienes un ID predefinido, puedes dejarlo como null
-        on: true,                 // Estado inicial de la máquina
+        idMachine: 0, // Envía un número entero, 0 como placeholder
+        machineName: this.machineName, // Mantiene como string
+        idRoom: parseInt(this.idRoom), // Convierte a entero
+        createdBy: parseInt(createdBy), // Convierte a entero
+        createDate: currentDate, // Solo la fecha (formato YYYY-MM-DD)
+        update: null, // Valor null explícito
+        on: true, // Valor booleano
       };
 
       try {
-        // Realizar la solicitud POST al endpoint correcto
+        // Realiza la solicitud POST
         const response = await axios.post("http://localhost:8000/machine/create", machineData);
 
-        // Verificar la respuesta del servidor
-        if (response.data.status === "ok") {
+        // Verifica si el servidor respondió correctamente
+        if (response.status === 200 || response.data.status === "ok") {
           this.successMessage = "Máquina creada exitosamente.";
           this.errorMessage = "";
-          this.resetForm();  // Restablecer el formulario
-          // Redirigir al dashboard de administrador
-          this.$router.push('/dashboardAdmin');
+          this.resetForm(); // Limpiar formulario
+          this.$router.push('/dashboardAdmin'); // Redirección
         } else {
-          this.errorMessage = response.data.message;
+          this.errorMessage = response.data.message || "Error inesperado.";
           this.successMessage = "";
         }
       } catch (error) {
         this.errorMessage = "Ocurrió un error al crear la máquina.";
         this.successMessage = "";
-        console.error(error);
+        console.error("Error al enviar solicitud:", error.response?.data || error.message);
       }
     },
 
-    // Método para resetear el formulario
     resetForm() {
       this.machineName = "";
       this.idRoom = "";
@@ -108,6 +104,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 /* Estilos generales */

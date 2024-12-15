@@ -72,6 +72,7 @@
         <button @click="redirectToCreateAdmin">Crear Administrador</button>
         <button @click="redirectToDeleteAdmin">Eliminar Administrador</button>
         <button @click="redirectToMachineStatus">Ver Estado de Máquinas</button> 
+        <button @click="redirectToCreateMachine">Crear máquina</button>
         <button @click="redirectToCreateResident">Crear Residente</button>
         <button @click="redirectToListResidents">Listar Residentes</button>
         <button @click="redirectToCreateRoom">Crear habitación</button>
@@ -211,6 +212,11 @@ export default {
 
     redirectToCreateResident() {
       this.$router.push("/createResident");
+      this.menuOpen = false;
+    },
+
+    redirectToCreateMachine() {
+      this.$router.push("/createMachine");
       this.menuOpen = false;
     },
 

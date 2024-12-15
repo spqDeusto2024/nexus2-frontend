@@ -14,7 +14,7 @@ import ListRooms from './components/ListRooms.vue';
 import CreateFamily from './components/CreateFamily.vue';
 import ListFamily from './components/ListFamily.vue';
 import ViewAdmin from './components/ViewAdmin.vue'; 
-
+import CreateMachine from './components/CreateMachine.vue'; 
 const routes = [
   {
     path: '/',
@@ -46,6 +46,12 @@ const routes = [
     path: '/listResidents',
     name: 'ListResidents',
     component: ListResidents,
+  },
+
+  {
+    path: '/createMachine',
+    name: 'CreateMachine',
+    component: CreateMachine,
   },
 
   {
